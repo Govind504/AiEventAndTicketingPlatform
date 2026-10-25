@@ -195,6 +195,12 @@ async function openDashboard() {
   let user;
   try {
     ({ user } = await requestJson("/api/auth/me", { headers: dashboardHeaders() }));
+    if (organizerSignup && user.role === "attendee") {
+      ({ user } = await requestJson("/api/auth/become-organizer", {
+        method: "POST",
+        body: {}
+      }));
+    }
   } catch (error) {
     if (error.status === 401) {
       window.GatherAccount = null;
@@ -243,13 +249,7 @@ authForm.addEventListener("submit", async (event) => {
   const values = Object.fromEntries(new FormData(authForm));
   if (authMode === "login") delete values.name;
   try {
-    const result = await requestJson(`/api/auth/${authMode}`, { method: "POST", body: values });
-    if (organizerSignup && result.user.role === "attendee") {
-      await requestJson("/api/auth/become-organizer", {
-        method: "POST",
-        body: {}
-      });
-    }
+    await requestJson(`/api/auth/${authMode}`, { method: "POST", body: values });
     authForm.reset();
     await openDashboard();
   } catch (error) {
