@@ -310,6 +310,9 @@ document.querySelector("#reservation-form").addEventListener("submit", async (ev
         ondismiss: () => showToast("Checkout closed. Any held tickets will be released automatically if payment is not completed.")
       }
     });
+    razorpayCheckout.on("payment.failed", (payment) => {
+      showToast(payment.error?.description || "Razorpay could not complete this payment. Try another test payment method.");
+    });
     razorpayCheckout.open();
   } catch (error) {
     showToast(error.message);
