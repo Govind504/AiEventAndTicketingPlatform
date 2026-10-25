@@ -112,6 +112,60 @@ function renderEvents(events, salesById) {
   }
 }
 
+async function renderAccountBookings(bookings) {
+  const list = document.querySelector("#account-bookings");
+  list.replaceChildren();
+  if (bookings.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "dashboard-message";
+    empty.textContent = "No bookings found for this account. Tickets purchased while signed out will not appear here.";
+    list.append(empty);
+    return;
+  }
+
+  const cards = await Promise.all(bookings.map(async (booking) => {
+    const card = document.createElement("article");
+    card.className = "account-booking";
+    const title = document.createElement("h3");
+    title.textContent = booking.event?.title || "Event details unavailable";
+    const details = document.createElement("p");
+    details.textContent = booking.event
+      ? `${booking.event.venue}, ${booking.event.city} · ${dateTime(booking.event.startsAt, Intl.DateTimeFormat().resolvedOptions().timeZone)}`
+      : "Event details are unavailable.";
+    const status = document.createElement("p");
+    status.textContent = booking.status === "paid"
+      ? `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)} · Confirmed`
+      : `Booking status: ${booking.status}`;
+    card.append(title, details, status);
+
+    if (booking.status === "paid") {
+      const ticketList = document.createElement("div");
+      ticketList.className = "account-booking-tickets";
+      try {
+        const { tickets } = await requestJson(`/api/account/bookings/${encodeURIComponent(booking.id)}/tickets`);
+        for (const ticket of tickets) {
+          const ticketCard = document.createElement("div");
+          ticketCard.className = "account-booking-ticket";
+          const image = document.createElement("img");
+          image.src = ticket.qrCode;
+          image.alt = `QR code for ticket ${ticket.number}`;
+          const number = document.createElement("small");
+          number.textContent = `Ticket ${ticket.number}${ticket.checkedInAt ? " · Already used" : ""}`;
+          ticketCard.append(image, number);
+          ticketList.append(ticketCard);
+        }
+      } catch (error) {
+        const message = document.createElement("p");
+        message.textContent = `Ticket QR unavailable: ${error.message}`;
+        ticketList.append(message);
+      }
+      card.append(ticketList);
+    }
+    return card;
+  }));
+  list.append(...cards);
+}
+
 async function openTicketScanner(event) {
   scanBusy = false;
   selectedScanEventId = event._id;
@@ -244,6 +298,8 @@ async function loadDashboard() {
     document.querySelector(".dashboard-title-row > a").hidden = true;
     document.querySelector("#dashboard-subtitle").textContent = "Your account";
     document.querySelector("#dashboard-role-label").textContent = "YOUR GATHER ACCOUNT";
+    const { bookings } = await requestJson("/api/account/dashboard");
+    await renderAccountBookings(bookings);
     return;
   }
   if (user.role !== "organizer") {
@@ -251,14 +307,16 @@ async function loadDashboard() {
   }
 
   document.querySelector("#dashboard-subtitle").textContent = "Manage your events, ticket sales, and earnings.";
-  const [dashboard, allEvents] = await Promise.all([
+  const [dashboard, allEvents, accountDashboard] = await Promise.all([
     requestJson("/api/organizer/dashboard"),
-    requestJson("/api/organizer/events")
+    requestJson("/api/organizer/events"),
+    requestJson("/api/account/dashboard")
   ]);
   dashboardEvents = allEvents.events;
   const salesById = new Map(dashboard.events.map((event) => [event.id, event]));
   renderMetrics(dashboard.summary);
   renderEvents(dashboardEvents, salesById);
+  await renderAccountBookings(accountDashboard.bookings);
   document.querySelector("#organizer-view").hidden = false;
 }
 

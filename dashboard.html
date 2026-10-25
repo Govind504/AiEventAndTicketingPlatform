@@ -21,6 +21,14 @@
       .dashboard-main .dashboard-metric span { font-size: 11px; }
       .dashboard-section-heading { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 15px; }
       .dashboard-section-heading h2 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 600; }
+      .account-bookings { display: grid; gap: 12px; margin-top: 42px; }
+      .account-booking { padding: 18px; background: #ebeee7; }
+      .account-booking h3 { margin: 0 0 6px; font-family: var(--display); font-size: 19px; font-weight: 600; }
+      .account-booking p { margin: 4px 0; color: var(--muted); font-size: 12px; }
+      .account-booking-tickets { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+      .account-booking-ticket { display: grid; justify-items: center; gap: 6px; padding: 10px; background: #fff; }
+      .account-booking-ticket img { width: 140px; height: 140px; }
+      .account-booking-ticket small { color: var(--ink); font-size: 11px; }
       .organizer-events { display: grid; gap: 12px; }
       .organizer-event { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px; background: #ebeee7; }
       .organizer-event img { width: 110px; height: 82px; object-fit: cover; background: #d9ded5; }
@@ -78,6 +86,10 @@
           <h2>Start hosting with Gather</h2>
           <p>Switch your account to organizer access to create and manage events.</p>
           <button class="reserve-button" id="become-organizer" type="button">Become an organizer <span aria-hidden="true">↗</span></button>
+        </section>
+        <section class="account-bookings" aria-label="Your ticket bookings">
+          <div class="dashboard-section-heading"><h2>Your tickets</h2><span class="dashboard-hint">Bookings made while signed in to this account</span></div>
+          <div id="account-bookings" class="organizer-events"></div>
         </section>
       </section>
       <section id="dashboard-error" class="dashboard-message" role="alert" hidden></section>

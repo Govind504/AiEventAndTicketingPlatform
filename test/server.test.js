@@ -46,11 +46,14 @@ test("dashboard client script is served", async () => {
 test("organizer dashboard page and script are served", async () => {
   const page = await fetch(`${baseUrl}/dashboard`);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Your events/);
+  const pageHtml = await page.text();
+  assert.match(pageHtml, /Your events/);
+  assert.match(pageHtml, /Your tickets/);
 
   const script = await fetch(`${baseUrl}/organizer-dashboard.js`);
   assert.equal(script.status, 200);
   assert.match(script.headers.get("content-type"), /javascript/);
+  assert.match(await script.text(), /renderAccountBookings/);
 });
 
 test("event placeholder image is served", async () => {
