@@ -51,7 +51,10 @@ async function requestJson(url, options = {}) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(data.error || "Request failed. Please try again.");
+    const fieldErrors = Array.isArray(data.fields)
+      ? data.fields.map(({ field, message }) => `${field ? `${field}: ` : ""}${message}`).join("; ")
+      : "";
+    const error = new Error(fieldErrors || data.error || "Request failed. Please try again.");
     error.status = response.status;
     throw error;
   }
