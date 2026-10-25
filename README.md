@@ -54,7 +54,7 @@ Configure these environment variables in Vercel for Production (and Preview if n
 
 In MongoDB Atlas, allow connections from your Vercel deployment using a supported static egress IP option or secure networking integration; avoid a broad public IP allowlist. Deploy after setting the environment variables, then configure the Razorpay webhook URL as `https://your-domain.example/api/razorpay/webhook` and subscribe to `payment.captured`. Run `npm run seed` against the intended database only if you want the sample events and organizers there.
 
-Expired reservations are cleaned locally by the development server and on Vercel by the hourly cron in `vercel.json`. The hourly cron requires a Vercel plan that supports hourly Cron Jobs. `CRON_SECRET` must be set in the same Vercel environment; the cron request is rejected if the secret is missing or invalid.
+Expired reservations are cleaned locally by the development server and on Vercel by the daily cron in `vercel.json`, compatible with the Hobby plan's daily schedule limit. `CRON_SECRET` must be set in the same Vercel environment; the cron request is rejected if the secret is missing or invalid. On Vercel, expired holds can remain reserved until the daily cleanup runs.
 
 ## API
 
