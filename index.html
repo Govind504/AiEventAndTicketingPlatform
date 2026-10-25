@@ -154,7 +154,7 @@
           <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" value="Portland" required maxlength="80"></label></div>
           <div class="host-form-row"><label class="host-field">State<input name="state" value="OR" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" value="0" required></label></div>
           <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" value="50" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Save as draft</option><option value="live">Publish now</option></select></label></div>
-          <label class="host-field">Event image URL<input name="image" type="url" placeholder="https://images.unsplash.com/photo-..." required><small>Paste a direct image URL from images.unsplash.com, not the Unsplash photo page URL.</small></label>
+          <label class="host-field">Event image URL<input name="image" type="url" placeholder="https://images.unsplash.com/photo-..."><small>Use a direct images.unsplash.com image URL. If omitted or invalid, your event is saved with a placeholder image.</small></label>
           <label class="host-field">Image description<input name="alt" required minlength="5" maxlength="240"></label>
           <button class="reserve-button" type="submit" id="event-form-submit">Save event <span aria-hidden="true">↗</span></button>
           <button class="text-button" type="button" id="event-edit-cancel" hidden>Cancel editing</button>

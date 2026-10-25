@@ -5,6 +5,10 @@ const Order = require("../models/Order");
 const { requireAuth, requireOrganizer } = require("../middleware/auth");
 
 const router = express.Router();
+const eventImage = z.string().trim().refine((value) => (
+  value === "/event-placeholder.svg"
+  || (URL.canParse(value) && new URL(value).protocol === "https:" && new URL(value).hostname === "images.unsplash.com")
+), "Use a direct image URL from images.unsplash.com");
 const eventInput = z.object({
   title: z.string().trim().min(3).max(120),
   category: z.enum(["music", "food", "art", "outdoors"]),
@@ -15,7 +19,7 @@ const eventInput = z.object({
   city: z.string().trim().min(2).max(80),
   state: z.string().trim().min(2).max(40),
   priceCents: z.number().int().min(0).max(100000000),
-  image: z.string().url().refine((value) => new URL(value).hostname === "images.unsplash.com", "Use a direct image URL from images.unsplash.com, not an Unsplash webpage link"),
+  image: eventImage,
   alt: z.string().trim().min(5).max(240),
   capacity: z.number().int().min(1).max(100000),
   status: z.enum(["draft", "live"]).default("draft")

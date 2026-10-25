@@ -81,6 +81,7 @@ app.get("/", (request, response) => response.sendFile(path.join(rootDir, "index.
 app.get("/styles.css", (request, response) => response.sendFile(path.join(rootDir, "styles.css")));
 app.get("/app.js", (request, response) => response.sendFile(path.join(rootDir, "app.js")));
 app.get("/dashboard.js", (request, response) => response.sendFile(path.join(rootDir, "dashboard.js")));
+app.get("/event-placeholder.svg", (request, response) => response.sendFile(path.join(rootDir, "event-placeholder.svg")));
 
 app.use("/api", (request, response) => response.status(404).json({ error: "API route not found" }));
 app.use((error, request, response, next) => {

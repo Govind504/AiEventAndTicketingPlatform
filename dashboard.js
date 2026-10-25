@@ -64,6 +64,16 @@ function friendlyDate(value) {
   return value ? new Date(value).toLocaleDateString(undefined, { dateStyle: "medium" }) : "Date unavailable";
 }
 
+function isSupportedEventImage(value) {
+  if (value === "/event-placeholder.svg") return true;
+  try {
+    const imageUrl = new URL(value);
+    return imageUrl.protocol === "https:" && imageUrl.hostname === "images.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
 function showRole(role) {
   document.querySelector("#client-dashboard").hidden = role !== "attendee";
   document.querySelector("#organizer-dashboard").hidden = role !== "organizer";
@@ -262,6 +272,7 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
   const form = event.currentTarget;
   const values = Object.fromEntries(new FormData(form));
   const categoryLabels = { music: "Live music", food: "Food & drink", art: "Art & culture", outdoors: "Outdoors" };
+  const imageNeedsFallback = !isSupportedEventImage(values.image);
   const input = {
     title: values.title,
     category: values.category,
@@ -272,8 +283,8 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
     city: values.city,
     state: values.state,
     priceCents: Math.round(Number(values.price) * 100),
-    image: values.image,
-    alt: values.alt,
+    image: imageNeedsFallback ? "/event-placeholder.svg" : values.image,
+    alt: imageNeedsFallback ? "Gather event placeholder image" : values.alt,
     capacity: Number(values.capacity),
     status: values.status
   };
@@ -287,7 +298,9 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
       headers: dashboardHeaders(),
       body: input
     });
-    document.querySelector("#host-event-note").textContent = "Event saved.";
+    document.querySelector("#host-event-note").textContent = imageNeedsFallback
+      ? "Event saved with a placeholder image. Use a direct images.unsplash.com link to show your own photo."
+      : "Event saved.";
     editingEventId = null;
     form.reset();
     document.querySelector("#event-form-heading").textContent = "Create an event";

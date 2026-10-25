@@ -42,6 +42,12 @@ test("dashboard client script is served", async () => {
   assert.match(response.headers.get("content-type"), /javascript/);
 });
 
+test("event placeholder image is served", async () => {
+  const response = await fetch(`${baseUrl}/event-placeholder.svg`);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /image\/svg\+xml/);
+});
+
 test("account, organizer, and administrator dashboards require authentication", async () => {
   for (const route of [
     "/api/account/dashboard",
