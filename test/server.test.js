@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const { after, test } = require("node:test");
-const { app } = require("../server");
+const app = require("../server");
 const { verifyPaymentSignature, verifyWebhookSignature } = require("../src/lib/razorpay");
 
 let server;
