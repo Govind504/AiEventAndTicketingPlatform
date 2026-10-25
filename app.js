@@ -11,6 +11,8 @@ const locationForm = document.querySelector("#location-form");
 const locationSearch = document.querySelector("#location-search");
 const locationSuggestions = document.querySelector("#location-suggestions");
 const locationSearchStatus = document.querySelector("#location-search-status");
+const locationMapPreview = document.querySelector("#location-map-preview");
+const useLocationButton = document.querySelector("#use-location-button");
 const toast = document.querySelector("#toast");
 const savedEvents = new Set();
 let legacySavedEventIds = [];
@@ -44,7 +46,7 @@ const usStateCodes = new Map([
   ["south dakota", "SD"], ["tennessee", "TN"], ["texas", "TX"], ["utah", "UT"], ["vermont", "VT"],
   ["virginia", "VA"], ["washington", "WA"], ["west virginia", "WV"], ["wisconsin", "WI"], ["wyoming", "WY"]
 ]);
-let locationSearchResults = [];
+let selectedLocationPlace = null;
 try {
   const savedLocation = JSON.parse(localStorage.getItem("gather-location") || "null");
   if (savedLocation && typeof savedLocation.city === "string" && savedLocation.city.trim()) {
@@ -77,8 +79,8 @@ function placeState(address) {
 
 function renderLocationSuggestions(places) {
   locationSuggestions.replaceChildren();
-  locationSearchResults = places;
-  for (const [index, place] of places.entries()) {
+
+  for (const place of places) {
     const item = document.createElement("li");
     const option = document.createElement("button");
     const city = placeCity(place.address || {});
@@ -91,10 +93,70 @@ function renderLocationSuggestions(places) {
       ? place.display_name
       : `${place.display_name} · Select a result that includes a city to filter events`;
     option.disabled = !city;
-    option.addEventListener("click", () => selectLocation(city, state));
+    option.addEventListener("click", () => previewLocation(place, option));
     item.append(option);
     locationSuggestions.append(item);
   }
+  if (places.length) previewLocation(places[0], locationSuggestions.querySelector(".location-suggestion"));
+  else clearLocationPreview();
+}
+
+function mapBounds(place) {
+  const latitude = Number(place.lat);
+  const longitude = Number(place.lon);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90
+    || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) return null;
+
+  let [south, north, west, east] = Array.isArray(place.boundingbox)
+    ? place.boundingbox.map(Number)
+    : [];
+  if (![south, north, west, east].every(Number.isFinite)
+    || south < -90 || north > 90 || west < -180 || east > 180
+    || south > north || west > east) {
+    south = latitude - 0.03;
+    north = latitude + 0.03;
+    west = longitude - 0.03;
+    east = longitude + 0.03;
+  }
+
+  const minLatitudeSpan = 0.008;
+  const minLongitudeSpan = 0.008;
+  if (north - south < minLatitudeSpan) {
+    south = Math.max(-90, latitude - minLatitudeSpan / 2);
+    north = Math.min(90, latitude + minLatitudeSpan / 2);
+  }
+  if (east - west < minLongitudeSpan) {
+    west = Math.max(-180, longitude - minLongitudeSpan / 2);
+    east = Math.min(180, longitude + minLongitudeSpan / 2);
+  }
+  return { latitude, longitude, south, north, west, east };
+}
+
+function clearLocationPreview() {
+  selectedLocationPlace = null;
+  locationMapPreview.removeAttribute("src");
+  locationMapPreview.hidden = true;
+  useLocationButton.hidden = true;
+}
+
+function previewLocation(place, selectedOption) {
+  const bounds = mapBounds(place);
+  if (!bounds || !placeCity(place.address || {})) {
+    clearLocationPreview();
+    return;
+  }
+  selectedLocationPlace = place;
+  locationSuggestions.querySelectorAll(".location-suggestion").forEach((option) => {
+    option.setAttribute("aria-selected", String(option === selectedOption));
+  });
+  const mapUrl = new URL("https://www.openstreetmap.org/export/embed.html");
+  mapUrl.searchParams.set("bbox", `${bounds.west},${bounds.south},${bounds.east},${bounds.north}`);
+  mapUrl.searchParams.set("layer", "mapnik");
+  mapUrl.searchParams.set("marker", `${bounds.latitude},${bounds.longitude}`);
+  locationMapPreview.src = mapUrl.href;
+  locationMapPreview.title = `Map preview for ${place.display_name}`;
+  locationMapPreview.hidden = false;
+  useLocationButton.hidden = false;
 }
 
 function searchLocations(value) {
@@ -102,7 +164,7 @@ function searchLocations(value) {
   locationSearchController?.abort();
   locationSearchController = null;
   locationSuggestions.replaceChildren();
-  locationSearchResults = [];
+  clearLocationPreview();
   const query = value.trim();
   const requestId = ++locationSearchRequestId;
   if (query.length < 3) {
@@ -340,6 +402,7 @@ document.querySelectorAll(".category-chip").forEach((button) => {
 document.querySelector("#location-picker-button").addEventListener("click", () => {
   locationSearch.value = "";
   locationSuggestions.replaceChildren();
+  clearLocationPreview();
   locationSearchStatus.textContent = `Search an address; your current location is ${currentLocation.city}${currentLocation.state ? `, ${currentLocation.state}` : ""}.`;
   locationDialog.showModal();
   locationSearch.focus();
@@ -353,14 +416,13 @@ locationDialog.addEventListener("close", () => {
   locationSearchController?.abort();
 });
 locationSearch.addEventListener("input", () => searchLocations(locationSearch.value));
-locationForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  if (locationSearchResults.length === 1) {
-    const place = locationSearchResults[0];
-    selectLocation(placeCity(place.address || {}), placeState(place.address || {}));
-  } else {
-    locationSearchStatus.textContent = "Choose an address from the suggestions.";
-  }
+locationForm.addEventListener("submit", (event) => event.preventDefault());
+useLocationButton.addEventListener("click", () => {
+  if (!selectedLocationPlace) return;
+  selectLocation(
+    placeCity(selectedLocationPlace.address || {}),
+    placeState(selectedLocationPlace.address || {})
+  );
 });
 
 searchInput.addEventListener("input", renderEvents);

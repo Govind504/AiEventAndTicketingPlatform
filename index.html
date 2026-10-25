@@ -171,6 +171,8 @@
           <label class="host-field">Address, city, or ZIP code<input id="location-search" name="address" type="search" required minlength="3" maxlength="120" placeholder="Try a street, neighborhood, or city" autocomplete="off" aria-controls="location-suggestions" aria-autocomplete="list"></label>
           <p id="location-search-status" class="host-form-note" role="status" aria-live="polite">Search for a place, then choose a suggestion.</p>
           <ul id="location-suggestions" class="location-suggestions" role="listbox" aria-label="Address suggestions"></ul>
+          <iframe id="location-map-preview" class="location-map-preview" title="Map preview for selected address" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
+          <button class="reserve-button" id="use-location-button" type="button" hidden>Use this location <span aria-hidden="true">↗</span></button>
           <small class="location-attribution">Address search by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
         </form>
       </div>

@@ -32,7 +32,7 @@ app.use(helmet({
       baseUri: ["'self'"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       formAction: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
-      frameSrc: ["'self'", "https://*.razorpay.com"],
+      frameSrc: ["'self'", "https://*.razorpay.com", "https://www.openstreetmap.org"],
       imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
       objectSrc: ["'none'"],
       scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://cdn.razorpay.com"],

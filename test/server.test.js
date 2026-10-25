@@ -30,6 +30,7 @@ test("health endpoint reports service status without exposing secrets", async ()
   assert.match(contentSecurityPolicy, /https:\/\/cdn\.razorpay\.com/);
   assert.match(contentSecurityPolicy, /https:\/\/lumberjack\.razorpay\.com/);
   assert.match(contentSecurityPolicy, /https:\/\/nominatim\.openstreetmap\.org/);
+  assert.match(contentSecurityPolicy, /https:\/\/www\.openstreetmap\.org/);
 });
 
 test("unknown API routes return a JSON 404", async () => {
@@ -52,6 +53,8 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(pageHtml, /location-dialog-title/);
   assert.match(pageHtml, /location-search/);
   assert.match(pageHtml, /location-suggestions/);
+  assert.match(pageHtml, /location-map-preview/);
+  assert.match(pageHtml, /use-location-button/);
 
   const script = await fetch(`${baseUrl}/app.js`);
   const scriptText = await script.text();
@@ -60,6 +63,7 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(scriptText, /www\.google\.com\/maps\/search/);
   assert.match(scriptText, /nominatim\.openstreetmap\.org\/search/);
   assert.match(scriptText, /selectLocation/);
+  assert.match(scriptText, /openstreetmap\.org\/export\/embed\.html/);
 });
 
 test("organizer dashboard page and script are served", async () => {
