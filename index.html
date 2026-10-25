@@ -166,12 +166,12 @@
       <button class="dialog-close" id="close-location-dialog" type="button" aria-label="Close location picker">×</button>
       <div class="dialog-content">
         <p class="eyebrow section-eyebrow">DISCOVER NEARBY</p>
-        <h2 id="location-dialog-title">Choose your location</h2>
+        <h2 id="location-dialog-title">Search an address</h2>
         <form id="location-form" class="host-form">
-          <label class="host-field">City<input name="city" required maxlength="80" autocomplete="address-level2"></label>
-          <label class="host-field">State or region (optional)<input name="state" maxlength="40" autocomplete="address-level1"></label>
-          <p class="host-form-note">Events will be filtered to the city and state you enter.</p>
-          <button class="reserve-button" type="submit">Show events <span aria-hidden="true">↗</span></button>
+          <label class="host-field">Address, city, or ZIP code<input id="location-search" name="address" type="search" required minlength="3" maxlength="120" placeholder="Try a street, neighborhood, or city" autocomplete="off" aria-controls="location-suggestions" aria-autocomplete="list"></label>
+          <p id="location-search-status" class="host-form-note" role="status" aria-live="polite">Search for a place, then choose a suggestion.</p>
+          <ul id="location-suggestions" class="location-suggestions" role="listbox" aria-label="Address suggestions"></ul>
+          <small class="location-attribution">Address search by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
         </form>
       </div>
     </dialog>

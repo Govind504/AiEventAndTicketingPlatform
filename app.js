@@ -8,6 +8,9 @@ const emptyState = document.querySelector("#empty-state");
 const dialog = document.querySelector("#ticket-dialog");
 const locationDialog = document.querySelector("#location-dialog");
 const locationForm = document.querySelector("#location-form");
+const locationSearch = document.querySelector("#location-search");
+const locationSuggestions = document.querySelector("#location-suggestions");
+const locationSearchStatus = document.querySelector("#location-search-status");
 const toast = document.querySelector("#toast");
 const savedEvents = new Set();
 let legacySavedEventIds = [];
@@ -25,6 +28,23 @@ let quantity = 1;
 let toastTimer;
 let currentUser = null;
 let currentLocation = { city: "Portland", state: "OR" };
+let locationSearchTimer;
+let locationSearchController;
+let locationSearchRequestId = 0;
+const locationSearchCache = new Map();
+const usStateCodes = new Map([
+  ["alabama", "AL"], ["alaska", "AK"], ["arizona", "AZ"], ["arkansas", "AR"], ["california", "CA"],
+  ["colorado", "CO"], ["connecticut", "CT"], ["delaware", "DE"], ["florida", "FL"], ["georgia", "GA"],
+  ["hawaii", "HI"], ["idaho", "ID"], ["illinois", "IL"], ["indiana", "IN"], ["iowa", "IA"],
+  ["kansas", "KS"], ["kentucky", "KY"], ["louisiana", "LA"], ["maine", "ME"], ["maryland", "MD"],
+  ["massachusetts", "MA"], ["michigan", "MI"], ["minnesota", "MN"], ["mississippi", "MS"], ["missouri", "MO"],
+  ["montana", "MT"], ["nebraska", "NE"], ["nevada", "NV"], ["new hampshire", "NH"], ["new jersey", "NJ"],
+  ["new mexico", "NM"], ["new york", "NY"], ["north carolina", "NC"], ["north dakota", "ND"], ["ohio", "OH"],
+  ["oklahoma", "OK"], ["oregon", "OR"], ["pennsylvania", "PA"], ["rhode island", "RI"], ["south carolina", "SC"],
+  ["south dakota", "SD"], ["tennessee", "TN"], ["texas", "TX"], ["utah", "UT"], ["vermont", "VT"],
+  ["virginia", "VA"], ["washington", "WA"], ["west virginia", "WV"], ["wisconsin", "WI"], ["wyoming", "WY"]
+]);
+let locationSearchResults = [];
 try {
   const savedLocation = JSON.parse(localStorage.getItem("gather-location") || "null");
   if (savedLocation && typeof savedLocation.city === "string" && savedLocation.city.trim()) {
@@ -43,6 +63,106 @@ function renderCurrentLocation() {
     : currentLocation.city;
   document.querySelector("#current-location-label").textContent = label;
   document.querySelector("#location-picker-button").setAttribute("aria-label", `Change event location. Current location: ${label}`);
+}
+
+function placeCity(address) {
+  return address.city || address.town || address.village || address.municipality || address.hamlet || address.locality || "";
+}
+
+function placeState(address) {
+  const state = address.state || address.region || "";
+  if (address.country_code?.toLowerCase() === "us") return usStateCodes.get(state.toLowerCase()) || state;
+  return state;
+}
+
+function renderLocationSuggestions(places) {
+  locationSuggestions.replaceChildren();
+  locationSearchResults = places;
+  for (const [index, place] of places.entries()) {
+    const item = document.createElement("li");
+    const option = document.createElement("button");
+    const city = placeCity(place.address || {});
+    const state = placeState(place.address || {});
+    option.type = "button";
+    option.className = "location-suggestion";
+    option.setAttribute("role", "option");
+    option.setAttribute("aria-selected", "false");
+    option.textContent = city
+      ? place.display_name
+      : `${place.display_name} · Select a result that includes a city to filter events`;
+    option.disabled = !city;
+    option.addEventListener("click", () => selectLocation(city, state));
+    item.append(option);
+    locationSuggestions.append(item);
+  }
+}
+
+function searchLocations(value) {
+  window.clearTimeout(locationSearchTimer);
+  locationSearchController?.abort();
+  locationSearchController = null;
+  locationSuggestions.replaceChildren();
+  locationSearchResults = [];
+  const query = value.trim();
+  const requestId = ++locationSearchRequestId;
+  if (query.length < 3) {
+    locationSearchStatus.textContent = "Enter at least 3 characters to search.";
+    return;
+  }
+
+  locationSearchStatus.textContent = "Searching addresses…";
+  locationSearchTimer = window.setTimeout(async () => {
+    const cacheKey = query.toLowerCase();
+    if (locationSearchCache.has(cacheKey)) {
+      const places = locationSearchCache.get(cacheKey);
+      renderLocationSuggestions(places);
+      locationSearchStatus.textContent = places.length
+        ? "Choose an address to see events in that city."
+        : "No matching addresses found. Try another search.";
+      return;
+    }
+
+    const controller = new AbortController();
+    locationSearchController = controller;
+    try {
+      const url = new URL("https://nominatim.openstreetmap.org/search");
+      url.search = new URLSearchParams({
+        format: "jsonv2",
+        addressdetails: "1",
+        limit: "5",
+        q: query
+      });
+      const response = await fetch(url, {
+        signal: controller.signal,
+        headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error("Address search is temporarily unavailable.");
+      const places = await response.json();
+      if (requestId !== locationSearchRequestId) return;
+      locationSearchCache.set(cacheKey, places);
+      renderLocationSuggestions(places);
+      locationSearchStatus.textContent = places.length
+        ? "Choose an address to see events in that city."
+        : "No matching addresses found. Try another search.";
+    } catch (error) {
+      if (error.name === "AbortError" || requestId !== locationSearchRequestId) return;
+      locationSearchStatus.textContent = error.message || "Address search failed. Please try again.";
+    }
+  }, 1100);
+}
+
+async function selectLocation(city, state) {
+  if (!city) return;
+  currentLocation = { city, state };
+  try {
+    localStorage.setItem("gather-location", JSON.stringify(currentLocation));
+  } catch {
+    showToast("Location updated for this visit, but could not be saved in this browser.");
+  }
+  renderCurrentLocation();
+  locationDialog.close();
+  await loadEvents();
+  document.querySelector("#events").scrollIntoView({ behavior: "smooth" });
 }
 
 function formatPrice(priceCents, currency = "INR") {
@@ -218,29 +338,29 @@ document.querySelectorAll(".category-chip").forEach((button) => {
 });
 
 document.querySelector("#location-picker-button").addEventListener("click", () => {
-  locationForm.elements.city.value = currentLocation.city;
-  locationForm.elements.state.value = currentLocation.state;
+  locationSearch.value = "";
+  locationSuggestions.replaceChildren();
+  locationSearchStatus.textContent = `Search an address; your current location is ${currentLocation.city}${currentLocation.state ? `, ${currentLocation.state}` : ""}.`;
   locationDialog.showModal();
+  locationSearch.focus();
 });
 document.querySelector("#close-location-dialog").addEventListener("click", () => locationDialog.close());
 locationDialog.addEventListener("click", (event) => {
   if (event.target === locationDialog) locationDialog.close();
 });
-locationForm.addEventListener("submit", async (event) => {
+locationDialog.addEventListener("close", () => {
+  window.clearTimeout(locationSearchTimer);
+  locationSearchController?.abort();
+});
+locationSearch.addEventListener("input", () => searchLocations(locationSearch.value));
+locationForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  currentLocation = {
-    city: locationForm.elements.city.value.trim(),
-    state: locationForm.elements.state.value.trim()
-  };
-  try {
-    localStorage.setItem("gather-location", JSON.stringify(currentLocation));
-  } catch {
-    showToast("Location updated for this visit, but could not be saved in this browser.");
+  if (locationSearchResults.length === 1) {
+    const place = locationSearchResults[0];
+    selectLocation(placeCity(place.address || {}), placeState(place.address || {}));
+  } else {
+    locationSearchStatus.textContent = "Choose an address from the suggestions.";
   }
-  renderCurrentLocation();
-  locationDialog.close();
-  await loadEvents();
-  document.querySelector("#events").scrollIntoView({ behavior: "smooth" });
 });
 
 searchInput.addEventListener("input", renderEvents);
