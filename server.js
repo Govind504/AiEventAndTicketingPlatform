@@ -24,6 +24,7 @@ const appUrl = process.env.APP_URL || "http://localhost:3000";
 
 app.set("trust proxy", process.env.TRUST_PROXY === "true");
 app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],

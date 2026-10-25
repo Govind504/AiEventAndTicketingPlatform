@@ -24,6 +24,7 @@ test("health endpoint reports service status without exposing secrets", async ()
   assert.ok(["connected", "disconnected"].includes(body.database));
   assert.equal(typeof body.checkoutConfigured, "boolean");
   assert.equal("secret" in body, false);
+  assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
 });
 
 test("unknown API routes return a JSON 404", async () => {
