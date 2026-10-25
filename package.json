@@ -1,0 +1,26 @@
+{
+  "name": "gather-events",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Event discovery and ticket checkout platform",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "seed": "node scripts/seed-events.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.12.1",
+    "razorpay": "^2.9.8",
+    "zod": "^4.6.6"
+  }
+}

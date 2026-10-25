@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f6f0">
+    <meta name="description" content="Find the little nights and big moments happening around Portland. Discover events and reserve your spot with Gather.">
+    <title>Gather — Good plans start here</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+    <script src="dashboard.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="Gather home"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link active" href="#events">Discover</a>
+        <a class="nav-link" href="#how-it-works">How it works</a>
+        <a class="nav-link" href="#host">For hosts</a>
+      </nav>
+      <div class="header-actions">
+        <button class="location-button" type="button" aria-label="Current city: Portland"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span>Portland, OR</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+        <a class="saved-link" href="#events" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8Z"/></svg><span>Saved</span></a>
+        <button class="text-button account-button" type="button" data-open-account>My dashboard</button>
+        <a class="host-button" href="#host" data-open-host>List an event <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <img class="hero-image" src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=2200&q=85" alt="A crowd gathered beneath the lights at a live music show">
+        <div class="hero-shade"></div>
+        <div class="hero-content">
+          <p class="eyebrow"><span class="live-dot"></span> YOUR CITY, OUT THERE</p>
+          <h1 id="hero-title">Good plans<br>start <span>here.</span></h1>
+          <p class="hero-copy">Find the little nights and big moments<br class="desktop-break"> happening around you.</p>
+          <a class="hero-cta" href="#events">Find your next thing <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="hero-caption"><span class="caption-line"></span><span>NOT JUST ANOTHER NIGHT IN</span></div>
+        <div class="hero-feature">
+          <div><span class="feature-label">TONIGHT'S PICK</span><h2>Sundown Sessions</h2><p>Live music, open air, no bad seats.</p></div>
+          <button class="feature-arrow" type="button" data-event-id="sundown" aria-label="Get tickets for Sundown Sessions">↗</button>
+        </div>
+        <span class="hero-index" aria-hidden="true">01 / 04</span>
+      </section>
+
+      <section class="discovery section-wrap" id="events" aria-labelledby="events-title">
+        <div class="section-heading">
+          <div><p class="eyebrow section-eyebrow">MAKE THE MOST OF IT</p><h2 id="events-title">What's happening<span class="heading-period">.</span></h2></div>
+          <p class="section-note">Good people. Good places.<br>One very good plan.</p>
+        </div>
+
+        <div class="discovery-tools">
+          <div class="category-list" role="group" aria-label="Filter events by category">
+            <button class="category-chip selected" type="button" data-category="all" aria-pressed="true">Everything <span>08</span></button>
+            <button class="category-chip" type="button" data-category="music" aria-pressed="false">Music</button>
+            <button class="category-chip" type="button" data-category="food" aria-pressed="false">Food & drink</button>
+            <button class="category-chip" type="button" data-category="art" aria-pressed="false">Art & culture</button>
+            <button class="category-chip" type="button" data-category="outdoors" aria-pressed="false">Outdoors</button>
+          </div>
+          <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><span class="sr-only">Search events</span><input id="event-search" type="search" placeholder="Search events" autocomplete="off"><kbd>/</kbd></label>
+        </div>
+
+        <div class="results-line"><span id="results-count" aria-live="polite">Showing 8 plans</span><label class="sort-label" for="sort-events">Sort by <select id="sort-events"><option value="soonest">Soonest</option><option value="price-low">Price: low to high</option></select></label></div>
+        <div class="event-grid" id="event-grid" aria-live="polite"></div>
+        <p class="empty-state" id="empty-state" hidden>No plans found. Try another search or category.</p>
+        <div class="more-events"><span>THAT'S A GOOD START</span><span class="more-rule"></span><a href="#host">Got something for us? <span aria-hidden="true">↗</span></a></div>
+      </section>
+
+      <section class="host-band" id="host" aria-labelledby="host-title">
+        <div class="host-band-inner">
+          <div><p class="eyebrow">YOU BRING THE PEOPLE</p><h2 id="host-title">We'll bring<br>the full house.</h2></div>
+          <div class="host-copy"><p>Make room for more of a good thing. Share your event with people who are already looking for a reason to show up.</p><button type="button" class="host-cta" data-open-host>Start hosting <span aria-hidden="true">↗</span></button></div>
+          <span class="host-spark" aria-hidden="true">✳</span>
+        </div>
+      </section>
+
+      <section class="how-section section-wrap" id="how-it-works" aria-labelledby="how-title">
+        <div class="how-intro"><p class="eyebrow section-eyebrow">NO BIG PRODUCTION</p><h2 id="how-title">Easy as<br>showing up.</h2></div>
+        <div class="how-steps">
+          <article class="how-step"><span class="step-number">01</span><div><h3>Find your thing</h3><p>Browse good stuff happening right around the corner.</p></div><span class="step-icon" aria-hidden="true">⌕</span></article>
+          <article class="how-step"><span class="step-number">02</span><div><h3>Save your spot</h3><p>Reserve tickets in a couple of taps. No weird hoops.</p></div><span class="step-icon" aria-hidden="true">↗</span></article>
+          <article class="how-step"><span class="step-number">03</span><div><h3>Make a memory</h3><p>Go do the thing. The rest can wait until tomorrow.</p></div><span class="step-icon" aria-hidden="true">✳</span></article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><a class="wordmark footer-wordmark" href="#top"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a><span>Go where the good stuff happens.</span><a href="mailto:hello@gather.events">Say hello <span aria-hidden="true">↗</span></a><span class="footer-year">PORTLAND · 2026</span></footer>
+
+    <dialog class="ticket-dialog" id="ticket-dialog" aria-labelledby="dialog-title">
+      <button class="dialog-close" type="button" aria-label="Close reservation dialog">×</button>
+      <div class="dialog-event-image" id="dialog-image"></div>
+      <div class="dialog-content" id="dialog-content">
+        <p class="eyebrow section-eyebrow">YOUR NEXT GOOD PLAN</p>
+        <h2 id="dialog-title">Event title</h2>
+        <p class="dialog-event-meta" id="dialog-meta"></p>
+        <form id="reservation-form">
+          <div class="ticket-choice"><div><strong>General admission</strong><span id="ticket-unit-price"></span></div><div class="quantity-control"><button type="button" data-quantity-change="-1" aria-label="Remove one ticket">−</button><output id="ticket-quantity" aria-live="polite">1</output><button type="button" data-quantity-change="1" aria-label="Add one ticket">+</button></div></div>
+          <label class="email-field" for="reservation-email">Email for your tickets<input id="reservation-email" type="email" placeholder="you@example.com" autocomplete="email" required></label>
+          <div class="reservation-total"><span>Total</span><strong id="reservation-total">$0</strong></div>
+          <button class="reserve-button" type="submit">Continue to secure checkout <span aria-hidden="true">↗</span></button>
+          <p class="demo-note">Secure payment handled by Razorpay. Gather never stores card details.</p>
+        </form>
+      </div>
+      <div class="confirmation" id="confirmation" hidden role="status"><span class="confirmation-mark" aria-hidden="true">✓</span><p class="eyebrow section-eyebrow">IT'S A PLAN</p><h2>You're on the list.</h2><p id="confirmation-copy"></p><button class="reserve-button done-button" type="button">Back to the good stuff</button></div>
+    </dialog>
+
+    <dialog class="host-dialog" id="host-dialog" aria-labelledby="host-dialog-title">
+      <button class="dialog-close" type="button" aria-label="Close host workspace">×</button>
+      <div class="host-dialog-content" id="host-auth-view">
+        <p class="eyebrow section-eyebrow">YOUR GATHER ACCOUNT</p>
+        <h2 id="host-dialog-title">Good to see<br>you here.</h2>
+        <div class="auth-mode" role="group" aria-label="Choose sign in or account creation"><button type="button" class="selected" data-host-mode="register" aria-pressed="true">Create account</button><button type="button" data-host-mode="login" aria-pressed="false">Sign in</button></div>
+        <form id="host-auth-form" class="host-form">
+          <label class="host-field" id="host-name-field">Your name<input name="name" required minlength="2" maxlength="80" autocomplete="name"></label>
+          <label class="host-field">Email<input name="email" type="email" required maxlength="254" autocomplete="email"></label>
+          <label class="host-field">Password<input name="password" type="password" required minlength="12" maxlength="100" autocomplete="new-password"></label>
+          <button class="reserve-button" type="submit" id="host-auth-submit">Create account <span aria-hidden="true">↗</span></button>
+          <p class="host-form-note" id="host-auth-note" aria-live="polite">Use at least 12 characters for your password.</p>
+        </form>
+      </div>
+      <div class="host-dialog-content" id="host-dashboard" hidden>
+        <div class="host-dashboard-heading"><div><p class="eyebrow section-eyebrow" id="dashboard-eyebrow">GATHER ACCOUNT</p><h2 id="host-dashboard-title">Your dashboard</h2></div><button type="button" id="host-signout" class="text-button">Sign out</button></div>
+        <p class="host-form-note" id="dashboard-error" role="status" hidden></p>
+        <section id="client-dashboard" class="role-dashboard" hidden aria-label="Client dashboard">
+          <div class="dashboard-metrics" id="client-metrics"></div>
+          <h3>Your bookings</h3>
+          <div class="dashboard-list" id="client-bookings"></div>
+        </section>
+        <section id="organizer-dashboard" class="role-dashboard" hidden aria-label="Event organizer dashboard">
+          <div class="dashboard-metrics" id="organizer-metrics"></div>
+          <h3>Event performance</h3>
+          <div class="dashboard-list" id="host-event-list"></div>
+        </section>
+        <section id="admin-dashboard" class="role-dashboard" hidden aria-label="Administrator dashboard">
+          <div class="dashboard-metrics" id="admin-metrics"></div>
+          <h3>All events <span class="dashboard-hint">Select an event to edit its details</span></h3>
+          <div class="dashboard-list" id="admin-event-list"></div>
+          <h3>Accounts</h3>
+          <div class="dashboard-list" id="admin-users"></div>
+          <button type="button" class="text-button dashboard-more" id="admin-users-more" hidden>Load more accounts</button>
+          <h3>All orders</h3>
+          <div class="dashboard-list" id="admin-orders"></div>
+          <button type="button" class="text-button dashboard-more" id="admin-orders-more" hidden>Load older orders</button>
+        </section>
+        <form id="host-event-form" class="host-form event-host-form">
+          <h3 id="event-form-heading">Create an event</h3>
+          <input type="hidden" name="timeZone">
+          <label class="host-field">Event name<input name="title" required minlength="3" maxlength="120"></label>
+          <div class="host-form-row"><label class="host-field">Category<select name="category" required><option value="music">Music</option><option value="food">Food & drink</option><option value="art">Art & culture</option><option value="outdoors">Outdoors</option></select></label><label class="host-field">Starts at<input name="startsAt" type="datetime-local" required></label></div>
+          <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" value="Portland" required maxlength="80"></label></div>
+          <div class="host-form-row"><label class="host-field">State<input name="state" value="OR" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" value="0" required></label></div>
+          <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" value="50" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Save as draft</option><option value="live">Publish now</option></select></label></div>
+          <label class="host-field">Event image URL (HTTPS)<input name="image" type="url" placeholder="https://..." required></label>
+          <label class="host-field">Image description<input name="alt" required minlength="5" maxlength="240"></label>
+          <button class="reserve-button" type="submit" id="event-form-submit">Save event <span aria-hidden="true">↗</span></button>
+          <button class="text-button" type="button" id="event-edit-cancel" hidden>Cancel editing</button>
+          <p class="host-form-note" id="host-event-note" aria-live="polite"></p>
+        </form>
+      </div>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

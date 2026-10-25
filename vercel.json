@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/maintenance/expire-orders",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
