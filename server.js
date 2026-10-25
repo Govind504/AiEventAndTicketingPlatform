@@ -34,8 +34,8 @@ app.use(helmet({
       frameSrc: ["'self'", "https://*.razorpay.com"],
       imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
       objectSrc: ["'none'"],
-      scriptSrc: ["'self'", "https://checkout.razorpay.com"],
-      connectSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
+      scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://cdn.razorpay.com"],
+      connectSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com", "https://lumberjack.razorpay.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       upgradeInsecureRequests: null
     }
