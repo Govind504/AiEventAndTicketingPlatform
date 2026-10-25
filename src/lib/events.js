@@ -23,6 +23,7 @@ function serializeEvent(event) {
     time: timeFormatter.format(event.startsAt),
     timeZone: event.timeZone,
     venue: `${event.venue} · ${event.city}`,
+    address: event.address || "",
     city: event.city,
     state: event.state,
     priceCents: event.priceCents,

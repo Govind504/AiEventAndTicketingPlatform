@@ -55,6 +55,9 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(pageHtml, /location-suggestions/);
   assert.match(pageHtml, /location-map-preview/);
   assert.match(pageHtml, /use-location-button/);
+  assert.match(pageHtml, /host-event-address-search/);
+  assert.match(pageHtml, /host-event-address-map/);
+  assert.match(pageHtml, /name="address"/);
 
   const script = await fetch(`${baseUrl}/app.js`);
   const scriptText = await script.text();
@@ -64,6 +67,9 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(scriptText, /nominatim\.openstreetmap\.org\/search/);
   assert.match(scriptText, /selectLocation/);
   assert.match(scriptText, /openstreetmap\.org\/export\/embed\.html/);
+  const addressSearch = await fetch(`${baseUrl}/address-search.js`);
+  assert.equal(addressSearch.status, 200);
+  assert.match(await addressSearch.text(), /GatherAddressSearch/);
 });
 
 test("organizer dashboard page and script are served", async () => {
@@ -72,6 +78,8 @@ test("organizer dashboard page and script are served", async () => {
   const pageHtml = await page.text();
   assert.match(pageHtml, /Your events/);
   assert.match(pageHtml, /Your tickets/);
+  assert.match(pageHtml, /edit-event-address-search/);
+  assert.match(pageHtml, /edit-event-address-map/);
 
   const script = await fetch(`${baseUrl}/organizer-dashboard.js`);
   assert.equal(script.status, 200);

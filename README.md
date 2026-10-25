@@ -34,6 +34,7 @@ The sample event dates are seeded once. The seed script includes three events in
 - Role-based dashboards for clients, event organizers, and administrators.
 - A dedicated organizer dashboard with the organizer's event list, event editing, ticket sales, and paid revenue.
 - A location picker on the home page searches addresses, previews the selected suggestion on an OpenStreetMap map, and filters events by its city and state; address suggestions use OpenStreetMap's public Nominatim service, and event cards link to Google Maps without requiring an API key. The search sends the entered address to Nominatim, whose public endpoint is rate-limited and intended for modest traffic; use a dedicated geocoding provider or self-hosted service if usage grows.
+- Event creation and editing include the same address search and map preview. A selected address fills the event city/state and is saved for its Google Maps venue link.
 - Each confirmed seat receives its own signed QR ticket. Organizers can scan tickets for their own events from the organizer dashboard; QR codes are single-use, and duplicate scans are rejected.
 - Administrator overview of all accounts, events, orders, platform revenue, and event editing.
 - Self-service organizer access, event publishing, drafts, event editing, and cancellation.

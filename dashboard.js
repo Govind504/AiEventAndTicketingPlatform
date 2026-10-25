@@ -3,6 +3,7 @@ const authView = document.querySelector("#host-auth-view");
 const dashboard = document.querySelector("#host-dashboard");
 const authForm = document.querySelector("#host-auth-form");
 const dashboardHeaders = () => ({});
+const hostEventForm = document.querySelector("#host-event-form");
 let authMode = "register";
 let organizerSignup = false;
 let editingEventId = null;
@@ -10,6 +11,20 @@ let nextUsersPage = null;
 let nextOrdersPage = null;
 
 window.GatherAccount = null;
+
+const hostAddressSearch = window.GatherAddressSearch.attach({
+  input: document.querySelector("#host-event-address-search"),
+  status: document.querySelector("#host-event-address-status"),
+  suggestions: document.querySelector("#host-event-address-suggestions"),
+  map: document.querySelector("#host-event-address-map"),
+  selectButton: document.querySelector("#host-event-address-use"),
+  onSelect: (place, location) => {
+    hostEventForm.elements.address.value = place.display_name;
+    hostEventForm.elements.addressSearch.value = place.display_name;
+    hostEventForm.elements.city.value = location.city;
+    hostEventForm.elements.state.value = location.state;
+  }
+});
 
 function setAuthMode(mode) {
   authMode = mode;
@@ -206,10 +221,11 @@ async function loadMoreAdminRows(type) {
 
 function beginEventEdit(event) {
   editingEventId = event.id;
-  const form = document.querySelector("#host-event-form");
-  ["title", "category", "venue", "city", "state", "capacity", "status", "image", "alt"].forEach((name) => {
+  const form = hostEventForm;
+  ["title", "category", "venue", "address", "city", "state", "capacity", "status", "image", "alt"].forEach((name) => {
     form.elements[name].value = event[name] ?? "";
   });
+  hostAddressSearch.setAddress(event.address || "");
   const startsAt = new Date(event.startsAt);
   const localDate = new Date(startsAt.getTime() - startsAt.getTimezoneOffset() * 60000);
   form.elements.startsAt.value = localDate.toISOString().slice(0, 16);
@@ -292,7 +308,7 @@ authForm.addEventListener("submit", async (event) => {
   }
 });
 
-document.querySelector("#host-event-form").addEventListener("submit", async (event) => {
+hostEventForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const values = Object.fromEntries(new FormData(form));
@@ -305,6 +321,7 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
     startsAt: new Date(values.startsAt).toISOString(),
     timeZone: values.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Los_Angeles",
     venue: values.venue,
+    address: values.address,
     city: values.city,
     state: values.state,
     priceCents: Math.round(Number(values.price) * 100),
@@ -328,6 +345,7 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
       : "Event saved.";
     editingEventId = null;
     form.reset();
+    hostAddressSearch.clear();
     document.querySelector("#event-form-heading").textContent = "Create an event";
     document.querySelector("#event-form-submit").firstChild.textContent = "Save event ";
     document.querySelector("#event-edit-cancel").hidden = true;
@@ -341,7 +359,8 @@ document.querySelector("#host-event-form").addEventListener("submit", async (eve
 
 document.querySelector("#event-edit-cancel").addEventListener("click", () => {
   editingEventId = null;
-  document.querySelector("#host-event-form").reset();
+  hostEventForm.reset();
+  hostAddressSearch.clear();
   document.querySelector("#event-form-heading").textContent = "Create an event";
   document.querySelector("#event-form-submit").firstChild.textContent = "Save event ";
   document.querySelector("#event-edit-cancel").hidden = true;

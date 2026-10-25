@@ -100,8 +100,15 @@
       <form id="edit-event-form" class="host-form">
         <input type="hidden" name="eventId">
         <input type="hidden" name="timeZone">
+        <input type="hidden" name="address">
         <label class="host-field">Event name<input name="title" required minlength="3" maxlength="120"></label>
         <div class="host-form-row"><label class="host-field">Category<select name="category" required><option value="music">Music</option><option value="food">Food & drink</option><option value="art">Art & culture</option><option value="outdoors">Outdoors</option></select></label><label class="host-field">Starts at<input name="startsAt" type="datetime-local" required></label></div>
+        <label class="host-field">Search event address<input id="edit-event-address-search" name="addressSearch" type="search" maxlength="120" placeholder="Street address, venue, or ZIP code" autocomplete="off" aria-controls="edit-event-address-suggestions" aria-autocomplete="list"></label>
+        <p id="edit-event-address-status" class="host-form-note" role="status" aria-live="polite">Search for the event address, then choose a suggestion.</p>
+        <ul id="edit-event-address-suggestions" class="location-suggestions" role="listbox" aria-label="Event address suggestions"></ul>
+        <iframe id="edit-event-address-map" class="location-map-preview" title="Event address map preview" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
+        <button class="reserve-button" id="edit-event-address-use" type="button" hidden>Use this address <span aria-hidden="true">↗</span></button>
+        <small class="location-attribution">Address search by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
         <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" required maxlength="80"></label></div>
         <div class="host-form-row"><label class="host-field">State<input name="state" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" required></label></div>
         <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Draft</option><option value="live">Live</option></select></label></div>
@@ -122,6 +129,7 @@
         <button class="text-button" id="stop-ticket-scanner" type="button">Close scanner</button>
       </div>
     </dialog>
+    <script src="/address-search.js" defer></script>
     <script src="/organizer-dashboard.js" defer></script>
   </body>
 </html>

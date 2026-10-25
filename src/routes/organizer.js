@@ -18,6 +18,7 @@ const eventInput = z.object({
   startsAt: z.string().datetime({ offset: true }),
   timeZone: z.string().trim().min(1).max(80).default("America/Los_Angeles"),
   venue: z.string().trim().min(2).max(160),
+  address: z.string().trim().max(240).default(""),
   city: z.string().trim().min(2).max(80),
   state: z.string().trim().min(2).max(40),
   priceCents: z.number().int().min(0).max(100000000),

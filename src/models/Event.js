@@ -8,6 +8,7 @@ const eventSchema = new mongoose.Schema({
   startsAt: { type: Date, required: true, index: true },
   timeZone: { type: String, required: true, default: "America/Los_Angeles" },
   venue: { type: String, required: true, trim: true, maxlength: 160 },
+  address: { type: String, default: "", trim: true, maxlength: 240 },
   city: { type: String, required: true, trim: true, maxlength: 80 },
   state: { type: String, required: true, trim: true, maxlength: 40 },
   priceCents: { type: Number, required: true, min: 0, max: 100000000 },

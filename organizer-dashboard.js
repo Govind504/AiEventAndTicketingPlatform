@@ -3,6 +3,19 @@ const content = document.querySelector("#dashboard-content");
 const errorMessage = document.querySelector("#dashboard-error");
 const editDialog = document.querySelector("#edit-event-dialog");
 const editForm = document.querySelector("#edit-event-form");
+const editAddressSearch = window.GatherAddressSearch.attach({
+  input: document.querySelector("#edit-event-address-search"),
+  status: document.querySelector("#edit-event-address-status"),
+  suggestions: document.querySelector("#edit-event-address-suggestions"),
+  map: document.querySelector("#edit-event-address-map"),
+  selectButton: document.querySelector("#edit-event-address-use"),
+  onSelect: (place, location) => {
+    editForm.elements.address.value = place.display_name;
+    editForm.elements.addressSearch.value = place.display_name;
+    editForm.elements.city.value = location.city;
+    editForm.elements.state.value = location.state;
+  }
+});
 let currentUser;
 let dashboardEvents = [];
 let selectedScanEventId;
@@ -274,6 +287,8 @@ function openEditForm(event) {
   editForm.elements.startsAt.value = localTime.toISOString().slice(0, 16);
   editForm.elements.timeZone.value = event.timeZone;
   editForm.elements.venue.value = event.venue;
+  editForm.elements.address.value = event.address || "";
+  editAddressSearch.setAddress(event.address || "");
   editForm.elements.city.value = event.city;
   editForm.elements.state.value = event.state;
   editForm.elements.price.value = (event.priceCents / 100).toFixed(2);
@@ -358,6 +373,7 @@ editForm.addEventListener("submit", async (event) => {
     startsAt: new Date(values.startsAt).toISOString(),
     timeZone: values.timeZone || "America/Los_Angeles",
     venue: values.venue,
+    address: values.address,
     city: values.city,
     state: values.state,
     priceCents: Math.round(Number(values.price) * 100),

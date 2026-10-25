@@ -316,7 +316,7 @@ function renderEvents() {
   eventGrid.innerHTML = results.map((event, index) => {
     const mapUrl = new URL("https://www.google.com/maps/search/");
     mapUrl.searchParams.set("api", "1");
-    mapUrl.searchParams.set("query", `${event.venue}, ${event.state}`);
+    mapUrl.searchParams.set("query", event.address || `${event.venue}, ${event.city}, ${event.state}`);
     return `
     <article class="event-card" style="animation-delay:${Math.min(index * 45, 270)}ms">
       <div class="event-image-wrap">
