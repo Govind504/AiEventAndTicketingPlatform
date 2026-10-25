@@ -1,7 +1,7 @@
 const app = require("../server");
 
 module.exports = async (request, response) => {
-  if (request.url.startsWith("/api/") && !request.url.startsWith("/api/health")) {
+  if (request.url.startsWith("/api/")) {
     try {
       await app.connectDatabase();
     } catch (error) {
