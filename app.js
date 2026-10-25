@@ -214,7 +214,7 @@ eventGrid.addEventListener("click", async (event) => {
   if (!saveButton) return;
   if (!currentUser) {
     showToast("Sign in to save events to your account.");
-    document.querySelector("[data-open-account]").click();
+    window.location.href = "/?signin=1&returnTo=%2Fdashboard";
     return;
   }
   const id = saveButton.dataset.saveId;

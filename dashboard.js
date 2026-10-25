@@ -260,6 +260,11 @@ authForm.addEventListener("submit", async (event) => {
   if (authMode === "login") delete values.name;
   try {
     await requestJson(`/api/auth/${authMode}`, { method: "POST", body: values });
+    const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+    if (returnTo === "/dashboard") {
+      window.location.assign(returnTo);
+      return;
+    }
     authForm.reset();
     await openDashboard();
   } catch (error) {
@@ -359,6 +364,14 @@ document.querySelector(".host-dialog .dialog-close").addEventListener("click", (
 dashboardDialog.addEventListener("click", (event) => {
   if (event.target === dashboardDialog) dashboardDialog.close();
 });
+
+(function openRequestedAuthDialog() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("signin") !== "1" && params.get("host") !== "1") return;
+  organizerSignup = params.get("host") === "1";
+  if (params.get("signin") === "1") setAuthMode("login");
+  dashboardDialog.showModal();
+})();
 
 (async function restoreSignedInAccount() {
   try {

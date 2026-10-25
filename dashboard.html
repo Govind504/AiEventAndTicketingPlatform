@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f6f0">
+    <title>Your dashboard · Gather</title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+      .dashboard-page { min-height: 100vh; background: var(--paper); }
+      .dashboard-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px max(6vw, calc((100% - 1120px) / 2)); border-bottom: 1px solid var(--line); }
+      .dashboard-header .wordmark { color: var(--ink); }
+      .dashboard-header-actions { display: flex; align-items: center; gap: 20px; }
+      .dashboard-main { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 56px 0 80px; }
+      .dashboard-title-row { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+      .dashboard-title-row h1 { margin: 0; font-family: var(--display); font-size: clamp(34px, 5vw, 54px); font-weight: 600; }
+      .dashboard-title-row p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+      .dashboard-main .dashboard-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 42px; }
+      .dashboard-main .dashboard-metric { padding: 22px; }
+      .dashboard-main .dashboard-metric strong { font-size: 30px; }
+      .dashboard-main .dashboard-metric span { font-size: 11px; }
+      .dashboard-section-heading { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 15px; }
+      .dashboard-section-heading h2 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 600; }
+      .organizer-events { display: grid; gap: 12px; }
+      .organizer-event { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 14px; background: #ebeee7; }
+      .organizer-event img { width: 110px; height: 82px; object-fit: cover; background: #d9ded5; }
+      .organizer-event h3 { margin: 0 0 6px; font-family: var(--display); font-size: 18px; font-weight: 600; }
+      .organizer-event p { margin: 3px 0; color: var(--muted); font-size: 11px; }
+      .organizer-event-metrics { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; color: var(--ink); font-size: 11px; }
+      .organizer-event-metrics strong { font-weight: 700; }
+      .event-status { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+      .dashboard-message { padding: 18px; background: #ebeee7; color: var(--muted); font-size: 13px; }
+      .dashboard-page-dialog { width: min(650px, calc(100% - 28px)); max-height: 90vh; padding: 30px; border: 0; background: var(--paper); color: var(--ink); overflow: auto; }
+      .dashboard-page-dialog::backdrop { background: rgba(15, 24, 19, .66); }
+      .dashboard-page-dialog h2 { margin: 0 0 20px; font-family: var(--display); font-weight: 600; }
+      .dashboard-page-dialog .host-form { gap: 14px; }
+      @media (max-width: 620px) {
+        .dashboard-header { padding: 16px 20px; }
+        .dashboard-main { padding-top: 36px; }
+        .dashboard-title-row { align-items: start; flex-direction: column; }
+        .dashboard-main .dashboard-metrics { grid-template-columns: 1fr; }
+        .organizer-event { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
+        .organizer-event img { width: 76px; height: 76px; }
+        .organizer-event .event-status { grid-column: 2; }
+        .dashboard-page-dialog { padding: 24px 18px; }
+      }
+    </style>
+  </head>
+  <body class="dashboard-page">
+    <header class="dashboard-header">
+      <a class="wordmark" href="/"><span class="brand-mark" aria-hidden="true">g</span> gather</a>
+      <nav class="dashboard-header-actions" aria-label="Dashboard navigation">
+        <a class="text-button" href="/">Browse events</a>
+        <button class="text-button" id="dashboard-signout" type="button">Sign out</button>
+      </nav>
+    </header>
+    <main class="dashboard-main">
+      <section id="dashboard-loading" class="dashboard-message" role="status">Loading your dashboard…</section>
+      <section id="dashboard-content" hidden>
+        <div class="dashboard-title-row">
+          <div><p class="eyebrow section-eyebrow" id="dashboard-role-label">GATHER HOST STUDIO</p><h1 id="dashboard-greeting">Your dashboard</h1><p id="dashboard-subtitle"></p></div>
+          <a class="reserve-button" href="/?host=1#host" style="width:auto;min-width:175px">Create an event <span aria-hidden="true">↗</span></a>
+        </div>
+        <section id="organizer-view" hidden aria-label="Organizer dashboard">
+          <div class="dashboard-metrics" id="organizer-metrics"></div>
+          <div class="dashboard-section-heading"><h2>Your events</h2><span class="dashboard-hint">Event performance and earnings</span></div>
+          <div class="organizer-events" id="organizer-events"></div>
+        </section>
+        <section id="attendee-view" hidden class="dashboard-message">
+          <h2>Start hosting with Gather</h2>
+          <p>Switch your account to organizer access to create and manage events.</p>
+          <button class="reserve-button" id="become-organizer" type="button">Become an organizer <span aria-hidden="true">↗</span></button>
+        </section>
+      </section>
+      <section id="dashboard-error" class="dashboard-message" role="alert" hidden></section>
+    </main>
+    <dialog class="dashboard-page-dialog" id="edit-event-dialog">
+      <button class="dialog-close" id="close-edit-dialog" type="button" aria-label="Close edit event form">×</button>
+      <h2>Edit event</h2>
+      <form id="edit-event-form" class="host-form">
+        <input type="hidden" name="eventId">
+        <input type="hidden" name="timeZone">
+        <label class="host-field">Event name<input name="title" required minlength="3" maxlength="120"></label>
+        <div class="host-form-row"><label class="host-field">Category<select name="category" required><option value="music">Music</option><option value="food">Food & drink</option><option value="art">Art & culture</option><option value="outdoors">Outdoors</option></select></label><label class="host-field">Starts at<input name="startsAt" type="datetime-local" required></label></div>
+        <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" required maxlength="80"></label></div>
+        <div class="host-form-row"><label class="host-field">State<input name="state" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" required></label></div>
+        <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Draft</option><option value="live">Live</option></select></label></div>
+        <label class="host-field">Direct image URL (optional)<input name="image" type="url" placeholder="https://images.unsplash.com/photo-..."></label>
+        <label class="host-field">Image description<input name="alt" required minlength="5" maxlength="240"></label>
+        <p id="edit-event-message" class="host-form-note" role="status"></p>
+        <button class="reserve-button" type="submit">Save changes <span aria-hidden="true">↗</span></button>
+      </form>
+    </dialog>
+    <script src="/organizer-dashboard.js" defer></script>
+  </body>
+</html>

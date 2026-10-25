@@ -32,7 +32,7 @@ The sample event dates are seeded once. The seed script includes three events in
 - Public event listing, search, category filtering, and price sorting from MongoDB.
 - Registration data, bcrypt password hashes, and server-managed authentication sessions stored in MongoDB. The browser receives only an HttpOnly session cookie; each request is authenticated against the MongoDB session and user records.
 - Role-based dashboards for clients, event organizers, and administrators.
-- Organizer sales metrics for their own events, including tickets sold and paid ticket revenue.
+- A dedicated organizer dashboard with the organizer's event list, event editing, ticket sales, and paid revenue.
 - Administrator overview of all accounts, events, orders, platform revenue, and event editing.
 - Self-service organizer access, event publishing, drafts, event editing, and cancellation.
 - Guest or signed-in ticket checkout through Razorpay Standard Checkout, with UPI highlighted and other Razorpay-enabled payment methods retained. Payment signatures and captured payments are verified server-side before tickets are confirmed; signed-in orders appear in the client's booking history.
