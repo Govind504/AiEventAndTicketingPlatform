@@ -6,6 +6,8 @@ const sortSelect = document.querySelector("#sort-events");
 const resultsCount = document.querySelector("#results-count");
 const emptyState = document.querySelector("#empty-state");
 const dialog = document.querySelector("#ticket-dialog");
+const locationDialog = document.querySelector("#location-dialog");
+const locationForm = document.querySelector("#location-form");
 const toast = document.querySelector("#toast");
 const savedEvents = new Set();
 let legacySavedEventIds = [];
@@ -22,6 +24,26 @@ let selectedEvent = null;
 let quantity = 1;
 let toastTimer;
 let currentUser = null;
+let currentLocation = { city: "Portland", state: "OR" };
+try {
+  const savedLocation = JSON.parse(localStorage.getItem("gather-location") || "null");
+  if (savedLocation && typeof savedLocation.city === "string" && savedLocation.city.trim()) {
+    currentLocation = {
+      city: savedLocation.city.trim().slice(0, 80),
+      state: typeof savedLocation.state === "string" ? savedLocation.state.trim().slice(0, 40) : ""
+    };
+  }
+} catch {
+  currentLocation = { city: "Portland", state: "OR" };
+}
+
+function renderCurrentLocation() {
+  const label = currentLocation.state
+    ? `${currentLocation.city}, ${currentLocation.state}`
+    : currentLocation.city;
+  document.querySelector("#current-location-label").textContent = label;
+  document.querySelector("#location-picker-button").setAttribute("aria-label", `Change event location. Current location: ${label}`);
+}
 
 function formatPrice(priceCents, currency = "INR") {
   if (priceCents === 0) return "Free";
@@ -106,8 +128,14 @@ function renderEvents() {
   const results = filteredEvents();
   resultsCount.textContent = `Showing ${results.length} ${results.length === 1 ? "plan" : "plans"}`;
   emptyState.hidden = results.length > 0;
-  emptyState.textContent = savedOnly ? "No saved plans yet. Save an event to keep it here." : "No plans found. Try another search or category.";
-  eventGrid.innerHTML = results.map((event, index) => `
+  emptyState.textContent = savedOnly
+    ? "No saved plans yet. Save an event to keep it here."
+    : `No events found in ${currentLocation.city}. Try changing your location or search.`;
+  eventGrid.innerHTML = results.map((event, index) => {
+    const mapUrl = new URL("https://www.google.com/maps/search/");
+    mapUrl.searchParams.set("api", "1");
+    mapUrl.searchParams.set("query", `${event.venue}, ${event.state}`);
+    return `
     <article class="event-card" style="animation-delay:${Math.min(index * 45, 270)}ms">
       <div class="event-image-wrap">
         <img class="event-image" src="${escapeHtml(event.image)}" alt="${escapeHtml(event.alt)}" loading="lazy">
@@ -118,14 +146,18 @@ function renderEvents() {
         <div class="event-topline"><span class="event-category">${escapeHtml(event.categoryLabel)}</span><span>${escapeHtml(event.time.split(",")[0])}</span></div>
         <h3>${escapeHtml(event.title)}</h3>
         <div class="event-meta"><span>${escapeHtml(event.venue)}</span><span>${formatPrice(event.priceCents, event.currency)}</span></div>
+        <a class="event-map" href="${escapeHtml(mapUrl.href)}" target="_blank" rel="noopener noreferrer">View on Google Maps ↗</a>
         <button class="event-book" type="button" data-book-id="${escapeHtml(event.id)}">Get tickets <span aria-hidden="true">↗</span></button>
       </div>
-    </article>`).join("");
+    </article>`;
+  }).join("");
 }
 
 async function loadEvents() {
   try {
-    const data = await requestJson("/api/events");
+    const query = new URLSearchParams({ city: currentLocation.city });
+    if (currentLocation.state) query.set("state", currentLocation.state);
+    const data = await requestJson(`/api/events?${query}`);
     events = data.events;
     renderEvents();
   } catch {
@@ -183,6 +215,32 @@ document.querySelectorAll(".category-chip").forEach((button) => {
     });
     renderEvents();
   });
+});
+
+document.querySelector("#location-picker-button").addEventListener("click", () => {
+  locationForm.elements.city.value = currentLocation.city;
+  locationForm.elements.state.value = currentLocation.state;
+  locationDialog.showModal();
+});
+document.querySelector("#close-location-dialog").addEventListener("click", () => locationDialog.close());
+locationDialog.addEventListener("click", (event) => {
+  if (event.target === locationDialog) locationDialog.close();
+});
+locationForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  currentLocation = {
+    city: locationForm.elements.city.value.trim(),
+    state: locationForm.elements.state.value.trim()
+  };
+  try {
+    localStorage.setItem("gather-location", JSON.stringify(currentLocation));
+  } catch {
+    showToast("Location updated for this visit, but could not be saved in this browser.");
+  }
+  renderCurrentLocation();
+  locationDialog.close();
+  await loadEvents();
+  document.querySelector("#events").scrollIntoView({ behavior: "smooth" });
 });
 
 searchInput.addEventListener("input", renderEvents);
@@ -355,4 +413,5 @@ function showOrderConfirmation(order) {
 
 window.gatherRefreshEvents = loadEvents;
 
+renderCurrentLocation();
 loadEvents();

@@ -33,6 +33,7 @@ The sample event dates are seeded once. The seed script includes three events in
 - Registration data, bcrypt password hashes, and server-managed authentication sessions stored in MongoDB. The browser receives only an HttpOnly session cookie; each request is authenticated against the MongoDB session and user records.
 - Role-based dashboards for clients, event organizers, and administrators.
 - A dedicated organizer dashboard with the organizer's event list, event editing, ticket sales, and paid revenue.
+- A location picker on the home page filters events by city and optional state; event cards link to their venue in Google Maps without requiring an API key.
 - Each confirmed seat receives its own signed QR ticket. Organizers can scan tickets for their own events from the organizer dashboard; QR codes are single-use, and duplicate scans are rejected.
 - Administrator overview of all accounts, events, orders, platform revenue, and event editing.
 - Self-service organizer access, event publishing, drafts, event editing, and cancellation.

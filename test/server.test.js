@@ -43,6 +43,20 @@ test("dashboard client script is served", async () => {
   assert.match(response.headers.get("content-type"), /javascript/);
 });
 
+test("home page has a location picker and free Google Maps venue links", async () => {
+  const page = await fetch(`${baseUrl}/`);
+  const pageHtml = await page.text();
+  assert.equal(page.status, 200);
+  assert.match(pageHtml, /location-picker-button/);
+  assert.match(pageHtml, /location-dialog-title/);
+
+  const script = await fetch(`${baseUrl}/app.js`);
+  const scriptText = await script.text();
+  assert.equal(script.status, 200);
+  assert.match(scriptText, /gather-location/);
+  assert.match(scriptText, /www\.google\.com\/maps\/search/);
+});
+
 test("organizer dashboard page and script are served", async () => {
   const page = await fetch(`${baseUrl}/dashboard`);
   assert.equal(page.status, 200);

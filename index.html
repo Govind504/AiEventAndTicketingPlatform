@@ -22,7 +22,7 @@
         <a class="nav-link" href="#host">For hosts</a>
       </nav>
       <div class="header-actions">
-        <button class="location-button" type="button" aria-label="Current city: Portland"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span>Portland, OR</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+        <button class="location-button" id="location-picker-button" type="button" aria-label="Change event location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span id="current-location-label">Portland, OR</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
         <a class="saved-link" href="#events" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8Z"/></svg><span>Saved</span></a>
         <a class="text-button account-button" href="/dashboard">My dashboard</a>
         <a class="host-button" href="#host" data-open-host>List an event <span aria-hidden="true">↗</span></a>
@@ -159,6 +159,19 @@
           <button class="reserve-button" type="submit" id="event-form-submit">Save event <span aria-hidden="true">↗</span></button>
           <button class="text-button" type="button" id="event-edit-cancel" hidden>Cancel editing</button>
           <p class="host-form-note" id="host-event-note" aria-live="polite"></p>
+        </form>
+      </div>
+    </dialog>
+    <dialog class="ticket-dialog location-dialog" id="location-dialog" aria-labelledby="location-dialog-title">
+      <button class="dialog-close" id="close-location-dialog" type="button" aria-label="Close location picker">×</button>
+      <div class="dialog-content">
+        <p class="eyebrow section-eyebrow">DISCOVER NEARBY</p>
+        <h2 id="location-dialog-title">Choose your location</h2>
+        <form id="location-form" class="host-form">
+          <label class="host-field">City<input name="city" required maxlength="80" autocomplete="address-level2"></label>
+          <label class="host-field">State or region (optional)<input name="state" maxlength="40" autocomplete="address-level1"></label>
+          <p class="host-form-note">Events will be filtered to the city and state you enter.</p>
+          <button class="reserve-button" type="submit">Show events <span aria-hidden="true">↗</span></button>
         </form>
       </div>
     </dialog>

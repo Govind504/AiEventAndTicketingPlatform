@@ -34,6 +34,7 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .location-button, .saved-link { border: 0; background: transparent; display: inline-flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 12px; cursor: pointer; }
 .location-button svg { width: 16px; height: 16px; }
 .location-button .chevron { width: 12px; height: 12px; margin-left: -4px; }
+.location-button:hover { color: #d45541; }
 .saved-link svg { width: 17px; height: 17px; }
 .saved-link:hover { color: #d45541; }
 .saved-link[aria-pressed="true"] { color: #d45541; }
@@ -104,6 +105,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .event-info h3 { overflow: hidden; margin: 7px 0 7px; font-family: var(--display); font-size: 19px; line-height: 1.2; font-weight: 600; letter-spacing: 0; text-overflow: ellipsis; white-space: nowrap; }
 .event-meta { display: flex; justify-content: space-between; gap: 8px; color: #68736b; font-size: 10px; }
 .event-meta span:last-child { flex: 0 0 auto; color: var(--ink); font-weight: 700; }
+.event-map { display: inline-block; margin-top: 8px; color: #52645a; font-size: 10px; text-decoration: underline; text-underline-offset: 3px; }
+.event-map:hover { color: #d45541; }
 .event-book { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 0 0 4px; border: 0; border-bottom: 1px solid #aab4aa; background: transparent; color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; transition: gap .2s ease, border-color .2s ease; }
 .event-book:hover { gap: 13px; border-color: var(--ink); }
 .event-book span { color: #d45c47; font-size: 13px; }
@@ -139,6 +142,9 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 
 .ticket-dialog { position: fixed; width: min(470px, calc(100% - 32px)); max-height: min(92vh, 760px); padding: 0; border: 0; border-radius: 5px; background: var(--paper); color: var(--ink); box-shadow: 0 25px 100px rgba(9, 16, 12, .28); overflow: auto; }
 .ticket-dialog::backdrop { background: rgba(15, 24, 19, .66); backdrop-filter: blur(3px); }
+.location-dialog { padding: 0; }
+.location-dialog .dialog-content { padding: 34px; }
+.location-dialog h2 { margin: 0 0 22px; font-family: var(--display); font-weight: 600; }
 .host-dialog { position: fixed; width: min(570px, calc(100% - 32px)); max-height: min(92vh, 820px); padding: 0; border: 0; border-radius: 5px; background: var(--paper); color: var(--ink); box-shadow: 0 25px 100px rgba(9, 16, 12, .28); overflow: auto; }
 .host-dialog::backdrop { background: rgba(15, 24, 19, .66); backdrop-filter: blur(3px); }
 .dialog-close { position: absolute; z-index: 1; top: 12px; right: 12px; display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: rgba(245,246,240,.94); font-size: 24px; line-height: 1; cursor: pointer; }
@@ -234,7 +240,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .nav-link { font-size: 11px; }
   .nav-link.active::after { bottom: -14px; }
   .header-actions { gap: 14px; }
-  .location-button { display: none; }
+  .location-button { gap: 5px; font-size: 10px; }
+  .location-button span { max-width: 82px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .saved-link { font-size: 0; }
   .saved-link svg { width: 19px; height: 19px; }
   .host-button { padding: 9px 10px; font-size: 10px; gap: 6px; }
@@ -289,8 +296,10 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
   .host-dialog-content h2 { font-size: 27px; }
   .account-button { font-size: 0; }
   .account-button::after { content: "Account"; font-size: 10px; }
+  .header-actions { gap: 8px; }
   .dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .host-form-row { grid-template-columns: 1fr; gap: 12px; }
+  .location-dialog .dialog-content { padding: 28px 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

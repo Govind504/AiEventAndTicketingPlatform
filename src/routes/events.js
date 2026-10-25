@@ -10,6 +10,8 @@ router.get("/", async (request, response) => {
   const query = { status: "live", startsAt: { $gte: new Date() } };
   const category = typeof request.query.category === "string" ? request.query.category : "";
   const search = typeof request.query.search === "string" ? request.query.search.trim().slice(0, 80) : "";
+  const city = typeof request.query.city === "string" ? request.query.city.trim().slice(0, 80) : "";
+  const state = typeof request.query.state === "string" ? request.query.state.trim().slice(0, 40) : "";
   const sort = request.query.sort === "price-low" ? { priceCents: 1, startsAt: 1 } : { startsAt: 1 };
 
   if (category && category !== "all") {
@@ -19,6 +21,14 @@ router.get("/", async (request, response) => {
   if (search) {
     const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     query.$or = ["title", "categoryLabel", "venue", "city"].map((field) => ({ [field]: { $regex: escaped, $options: "i" } }));
+  }
+  if (city) {
+    const escapedCity = city.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    query.city = { $regex: `^${escapedCity}$`, $options: "i" };
+  }
+  if (state) {
+    const escapedState = state.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    query.state = { $regex: `^${escapedState}$`, $options: "i" };
   }
 
   const events = await Event.find(query).sort(sort).limit(100).lean();
