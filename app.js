@@ -331,7 +331,23 @@ function showOrderConfirmation(order) {
   document.querySelector("#confirmation h2").textContent = "You're on the list.";
   const ticketNoun = order.quantity === 1 ? "ticket" : "tickets";
   const verb = order.quantity === 1 ? "is" : "are";
-  document.querySelector("#confirmation-copy").textContent = `${order.quantity} ${ticketNoun} for ${order.eventTitle} ${verb} confirmed. Ticket code: ${order.ticketCode}.`;
+  document.querySelector("#confirmation-copy").textContent = `${order.quantity} ${ticketNoun} for ${order.eventTitle} ${verb} confirmed. Each ticket has its own single-use QR code.`;
+  const qrList = document.querySelector("#ticket-qr-list");
+  qrList.replaceChildren();
+  for (const ticket of order.tickets || []) {
+    const card = document.createElement("article");
+    card.className = "ticket-qr-card";
+    const image = document.createElement("img");
+    image.src = ticket.qrCode;
+    image.alt = `QR code for ticket ${ticket.number}`;
+    const label = document.createElement("strong");
+    label.textContent = `Ticket ${ticket.number}`;
+    card.append(image, label);
+    qrList.append(card);
+  }
+  if (!order.tickets?.length) {
+    document.querySelector("#confirmation-copy").textContent += " QR codes could not be created; please contact the event organizer.";
+  }
   document.querySelector("#dialog-content").hidden = true;
   document.querySelector("#confirmation").hidden = false;
   dialog.showModal();

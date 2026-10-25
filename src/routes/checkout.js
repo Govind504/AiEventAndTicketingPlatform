@@ -6,6 +6,7 @@ const Event = require("../models/Event");
 const Order = require("../models/Order");
 const { getCapturedPayment, getRazorpay, verifyPaymentSignature } = require("../lib/razorpay");
 const { releasePendingOrder, settlePaidOrder } = require("../lib/orders");
+const { isTicketSigningConfigured, ticketPresentations } = require("../lib/tickets");
 const { optionalAuth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -23,6 +24,9 @@ const verificationInput = z.object({
 
 router.post("/session", optionalAuth, async (request, response) => {
   const input = checkoutInput.parse(request.body);
+  if (!isTicketSigningConfigured()) {
+    return response.status(503).json({ error: "Ticket QR signing is not configured. Please try again later." });
+  }
   if (request.user && input.email.toLowerCase() !== request.user.email) {
     return response.status(403).json({ error: "Use the email address on your signed-in account" });
   }
@@ -67,7 +71,13 @@ router.post("/session", optionalAuth, async (request, response) => {
   try {
     if (event.priceCents === 0) {
       const paidOrder = await settlePaidOrder(order._id);
-      return response.status(201).json({ free: true, eventTitle: event.title, quantity: paidOrder.quantity, ticketCode: paidOrder.ticketCode });
+      return response.status(201).json({
+        free: true,
+        eventTitle: event.title,
+        quantity: paidOrder.quantity,
+        ticketCode: paidOrder.ticketCode,
+        tickets: await ticketPresentations(paidOrder._id)
+      });
     }
 
     const razorpayOrder = await razorpay.orders.create({
@@ -106,11 +116,13 @@ router.post("/verify", optionalAuth, async (request, response) => {
     return response.status(400).json({ error: "Payment does not match this ticket order" });
   }
   if (order.status === "paid") {
+    await settlePaidOrder(order._id);
     return response.json({
       status: "paid",
       eventTitle: order.event.title,
       quantity: order.quantity,
-      ticketCode: order.ticketCode
+      ticketCode: order.ticketCode,
+      tickets: await ticketPresentations(order._id)
     });
   }
   if (order.status !== "pending" || order.expiresAt <= new Date()) {
@@ -134,7 +146,8 @@ router.post("/verify", optionalAuth, async (request, response) => {
     status: "paid",
     eventTitle: order.event.title,
     quantity: paidOrder.quantity,
-    ticketCode: paidOrder.ticketCode
+    ticketCode: paidOrder.ticketCode,
+    tickets: await ticketPresentations(paidOrder._id)
   });
 });
 

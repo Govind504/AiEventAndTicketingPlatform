@@ -23,6 +23,7 @@ test("health endpoint reports service status without exposing secrets", async ()
   assert.equal(body.status, "ok");
   assert.ok(["connected", "disconnected"].includes(body.database));
   assert.equal(typeof body.checkoutConfigured, "boolean");
+  assert.equal(typeof body.ticketQrConfigured, "boolean");
   assert.equal("secret" in body, false);
   assert.equal(response.headers.get("cross-origin-opener-policy"), "same-origin-allow-popups");
   const contentSecurityPolicy = response.headers.get("content-security-policy");
@@ -63,9 +64,11 @@ test("account, organizer, and administrator dashboards require authentication", 
     "/api/account/dashboard",
     "/api/account/saved-events",
     "/api/organizer/dashboard",
+    "/api/account/bookings/507f1f77bcf86cd799439011/tickets",
     "/api/admin/dashboard",
     "/api/admin/users?page=1",
-    "/api/admin/orders?page=1"
+    "/api/admin/orders?page=1",
+    "/api/organizer/events/507f1f77bcf86cd799439011/scan"
   ]) {
     const response = await fetch(`${baseUrl}${route}`);
     assert.equal(response.status, 401, `${route} should require a signed-in user`);

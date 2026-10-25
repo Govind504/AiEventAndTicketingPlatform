@@ -16,6 +16,7 @@ const checkoutRoutes = require("./src/routes/checkout");
 const razorpayWebhook = require("./src/routes/razorpay-webhook");
 const Event = require("./src/models/Event");
 const expirePendingOrders = require("./src/lib/expire-orders");
+const { isTicketSigningConfigured } = require("./src/lib/tickets");
 const { isRazorpayConfigured } = require("./src/lib/razorpay");
 
 const app = express();
@@ -67,7 +68,8 @@ app.get("/api/health", (request, response) => {
   response.json({
     status: "ok",
     database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    checkoutConfigured: isRazorpayConfigured()
+    checkoutConfigured: isRazorpayConfigured(),
+    ticketQrConfigured: isTicketSigningConfigured()
   });
 });
 app.use("/api/auth", authLimiter, authRoutes);

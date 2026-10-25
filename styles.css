@@ -200,6 +200,12 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .confirmation-mark { display: inline-grid; width: 48px; height: 48px; place-items: center; margin-bottom: 22px; border-radius: 50%; background: var(--green); font-size: 23px; }
 .confirmation .eyebrow { margin-bottom: 10px; }
 .confirmation > p:not(.eyebrow) { margin: 13px 0 25px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.ticket-qr-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px 0; }
+.ticket-qr-card { display: grid; justify-items: center; gap: 7px; padding: 10px; border: 1px solid var(--line); background: #fff; }
+.ticket-qr-card img { width: 170px; height: 170px; }
+.ticket-qr-card strong { font-size: 11px; }
+.account-ticket-qr { display: inline-grid; justify-items: start; gap: 4px; margin: 5px 10px 0 0; vertical-align: top; }
+.account-ticket-qr img { width: 120px; height: 120px; background: #fff; }
 .toast { position: fixed; z-index: 5; right: 24px; bottom: 24px; padding: 13px 17px; background: var(--ink); color: #fff; font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s ease, transform .2s ease; }
 .toast.visible { opacity: 1; transform: translateY(0); }
 

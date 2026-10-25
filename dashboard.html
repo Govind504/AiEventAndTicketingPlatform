@@ -28,12 +28,20 @@
       .organizer-event p { margin: 3px 0; color: var(--muted); font-size: 11px; }
       .organizer-event-metrics { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; color: var(--ink); font-size: 11px; }
       .organizer-event-metrics strong { font-weight: 700; }
+      .organizer-event-actions { display: grid; justify-items: end; gap: 10px; }
       .event-status { color: var(--muted); font-size: 10px; text-transform: uppercase; }
       .dashboard-message { padding: 18px; background: #ebeee7; color: var(--muted); font-size: 13px; }
       .dashboard-page-dialog { width: min(650px, calc(100% - 28px)); max-height: 90vh; padding: 30px; border: 0; background: var(--paper); color: var(--ink); overflow: auto; }
       .dashboard-page-dialog::backdrop { background: rgba(15, 24, 19, .66); }
       .dashboard-page-dialog h2 { margin: 0 0 20px; font-family: var(--display); font-weight: 600; }
       .dashboard-page-dialog .host-form { gap: 14px; }
+      .ticket-scanner-dialog { width: min(620px, calc(100% - 28px)); }
+      .ticket-scanner-video { display: block; width: 100%; max-height: 55vh; background: #17221c; object-fit: cover; }
+      .ticket-scanner-result { min-height: 44px; margin: 14px 0; padding: 12px; background: #ebeee7; font-size: 13px; }
+      .ticket-scanner-result[data-state="success"] { background: #d8ecdc; color: #164d29; }
+      .ticket-scanner-result[data-state="error"] { background: #f6dfdc; color: #7c2118; }
+      .scanner-controls { display: flex; gap: 12px; margin-top: 12px; }
+      .scanner-controls button { width: auto; flex: 1; }
       @media (max-width: 620px) {
         .dashboard-header { padding: 16px 20px; }
         .dashboard-main { padding-top: 36px; }
@@ -41,7 +49,7 @@
         .dashboard-main .dashboard-metrics { grid-template-columns: 1fr; }
         .organizer-event { grid-template-columns: 76px minmax(0, 1fr); gap: 12px; }
         .organizer-event img { width: 76px; height: 76px; }
-        .organizer-event .event-status { grid-column: 2; }
+        .organizer-event-actions { grid-column: 2; grid-template-columns: auto auto; justify-content: start; justify-items: start; }
         .dashboard-page-dialog { padding: 24px 18px; }
       }
     </style>
@@ -90,6 +98,17 @@
         <p id="edit-event-message" class="host-form-note" role="status"></p>
         <button class="reserve-button" type="submit">Save changes <span aria-hidden="true">↗</span></button>
       </form>
+    </dialog>
+    <dialog class="dashboard-page-dialog ticket-scanner-dialog" id="ticket-scanner-dialog">
+      <button class="dialog-close" id="close-scanner-dialog" type="button" aria-label="Close ticket scanner">×</button>
+      <h2 id="scanner-event-title">Scan event tickets</h2>
+      <p class="host-form-note">Scan each attendee’s ticket QR once. Only this event’s organizer can check tickets in.</p>
+      <video class="ticket-scanner-video" id="ticket-scanner-video" playsinline muted></video>
+      <p class="ticket-scanner-result" id="ticket-scanner-result" role="status" aria-live="polite">Starting camera…</p>
+      <div class="scanner-controls">
+        <button class="reserve-button" id="scan-next-ticket" type="button" hidden>Scan next ticket</button>
+        <button class="text-button" id="stop-ticket-scanner" type="button">Close scanner</button>
+      </div>
     </dialog>
     <script src="/organizer-dashboard.js" defer></script>
   </body>

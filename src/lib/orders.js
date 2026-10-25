@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Order = require("../models/Order");
+const Ticket = require("../models/Ticket");
+const { createOrderTickets } = require("./tickets");
 
 async function settlePaidOrder(orderId, paymentId = null) {
   let settledOrder;
@@ -8,6 +10,9 @@ async function settlePaidOrder(orderId, paymentId = null) {
     const order = await Order.findById(orderId).session(session);
     if (!order) return;
     if (order.status === "paid") {
+      if (await Ticket.countDocuments({ order: order._id }).session(session) === 0) {
+        await createOrderTickets(order, session);
+      }
       settledOrder = order;
       return;
     }
@@ -24,6 +29,7 @@ async function settlePaidOrder(orderId, paymentId = null) {
     order.paidAt = new Date();
     order.paymentId = paymentId;
     await order.save({ session });
+    await createOrderTickets(order, session);
     settledOrder = order;
   });
   return settledOrder;

@@ -33,10 +33,12 @@ The sample event dates are seeded once. The seed script includes three events in
 - Registration data, bcrypt password hashes, and server-managed authentication sessions stored in MongoDB. The browser receives only an HttpOnly session cookie; each request is authenticated against the MongoDB session and user records.
 - Role-based dashboards for clients, event organizers, and administrators.
 - A dedicated organizer dashboard with the organizer's event list, event editing, ticket sales, and paid revenue.
+- Each confirmed seat receives its own signed QR ticket. Organizers can scan tickets for their own events from the organizer dashboard; QR codes are single-use, and duplicate scans are rejected.
 - Administrator overview of all accounts, events, orders, platform revenue, and event editing.
 - Self-service organizer access, event publishing, drafts, event editing, and cancellation.
 - Guest or signed-in ticket checkout through Razorpay Standard Checkout, with UPI highlighted and other Razorpay-enabled payment methods retained. Payment signatures and captured payments are verified server-side before tickets are confirmed; signed-in orders appear in the client's booking history.
 - Signed-in clients' saved events are stored in MongoDB with their account.
+- Each confirmed seat receives its own signed QR ticket. Organizers can scan tickets for their own events from the organizer dashboard; QR codes are single-use, and duplicate scans are rejected.
 - Signed Razorpay webhook verification, idempotent ticket fulfillment, capacity holds, and periodic cleanup of expired holds.
 - Free reservations, health endpoint, request validation, security headers, and basic auth/checkout rate limits.
 
@@ -51,6 +53,11 @@ Configure these environment variables in Vercel for Production (and Preview if n
 - `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`: use test credentials first, then switch to live credentials for production payments.
 - `RAZORPAY_WEBHOOK_SECRET`: the webhook signing secret configured in Razorpay.
 - `CRON_SECRET`: a long, random secret used to authorize scheduled expired-order cleanup.
+- `TICKET_SIGNING_SECRET`: a separate random secret of at least 32 characters used to sign ticket QR codes. Keep it stable; changing it invalidates QR codes already issued.
+
+Generate `TICKET_SIGNING_SECRET` locally with `node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"`, then set it in the local `.env` and Vercel's Production environment variables before accepting bookings. Never commit or share this value.
+
+Customers see one QR code per ticket on confirmation and can retrieve their tickets from their signed-in account dashboard. Organizers open their dashboard and select **Scan tickets** on one of their events; allow camera access and use a recent browser that supports `BarcodeDetector` (for example, current Chrome on HTTPS). Successful scans check in that ticket atomically; a second scan reports duplicate entry. Ticket scans are limited to the event's assigned organizer.
 
 In MongoDB Atlas, allow connections from your Vercel deployment using a supported static egress IP option or secure networking integration; avoid a broad public IP allowlist. Deploy after setting the environment variables, then configure the Razorpay webhook URL as `https://your-domain.example/api/razorpay/webhook` and subscribe to `payment.captured`. Run `npm run seed` against the intended database only if you want the sample events and organizers there.
 
@@ -66,6 +73,8 @@ Expired reservations are cleaned locally by the development server and on Vercel
 - `GET /api/organizer/dashboard`, `GET|POST /api/organizer/events`, `PATCH|DELETE /api/organizer/events/:id`
 - `GET /api/admin/dashboard`, `GET /api/admin/users?page=1`, `GET /api/admin/orders?page=1`, `PATCH /api/admin/events/:id` (administrator only; user and order lists are paginated)
 - `POST /api/checkout/session`, `POST /api/checkout/verify`
+- `GET /api/account/bookings/:orderId/tickets` (signed-in booking owner)
+- `POST /api/organizer/events/:eventId/scan` (organizer who owns that event)
 - `POST /api/razorpay/webhook` (Razorpay-signed `payment.captured` events)
 - `GET /api/maintenance/expire-orders` (Vercel Cron only; requires the configured bearer secret)
 

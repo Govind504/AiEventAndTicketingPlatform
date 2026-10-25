@@ -2,7 +2,9 @@ const express = require("express");
 const { z } = require("zod");
 const Event = require("../models/Event");
 const Order = require("../models/Order");
+const Ticket = require("../models/Ticket");
 const { requireAuth, requireOrganizer } = require("../middleware/auth");
+const { parseTicketPayload } = require("../lib/tickets");
 
 const router = express.Router();
 const eventImage = z.string().trim().refine((value) => (
@@ -64,6 +66,33 @@ router.get("/dashboard", async (request, response) => {
 router.get("/events", async (request, response) => {
   const events = await Event.find({ organizer: request.user._id }).sort({ startsAt: 1 }).lean();
   response.json({ events });
+});
+
+router.post("/events/:eventId/scan", async (request, response) => {
+  const event = await Event.findOne({ _id: request.params.eventId, organizer: request.user._id }).select("_id title");
+  if (!event) return response.status(404).json({ error: "Event not found for this organizer" });
+
+  const ticketId = parseTicketPayload(request.body?.ticket);
+  if (!ticketId) return response.status(400).json({ error: "Invalid ticket QR code" });
+  const ticket = await Ticket.findOne({ _id: ticketId, event: event._id }).select("_id order number checkedInAt");
+  if (!ticket) return response.status(404).json({ error: "Ticket is not valid for this event" });
+  if (!await Order.exists({ _id: ticket.order, status: "paid" })) {
+    return response.status(409).json({ error: "Ticket order is not paid" });
+  }
+
+  const checkedInAt = new Date();
+  const checkedIn = await Ticket.findOneAndUpdate(
+    { _id: ticket._id, event: event._id, checkedInAt: null },
+    { $set: { checkedInAt, checkedInBy: request.user._id } },
+    { new: true }
+  ).select("_id number checkedInAt");
+  if (!checkedIn) {
+    return response.status(409).json({
+      error: "Duplicate entry: this ticket has already been scanned",
+      checkedInAt: ticket.checkedInAt
+    });
+  }
+  response.json({ success: true, eventTitle: event.title, ticketNumber: checkedIn.number, checkedInAt: checkedIn.checkedInAt });
 });
 
 router.post("/events", async (request, response) => {

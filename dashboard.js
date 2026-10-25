@@ -99,7 +99,7 @@ async function loadClientDashboard() {
     list.append(makeRow("No bookings yet", "Your event tickets will appear here."));
     return;
   }
-  data.bookings.forEach((booking) => {
+  for (const booking of data.bookings) {
     const venueAndDate = booking.event ? `${booking.event.venue}, ${booking.event.city} · ${friendlyDate(booking.event.startsAt)}` : "Event details unavailable";
     const label = booking.status === "paid"
       ? `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)}`
@@ -107,11 +107,31 @@ async function loadClientDashboard() {
     const row = makeRow(booking.event?.title || "Event unavailable", venueAndDate, label);
     if (booking.ticketCode) {
       const code = document.createElement("small");
-      code.textContent = `Ticket code: ${booking.ticketCode}`;
+      code.textContent = `Booking code: ${booking.ticketCode}`;
       row.firstChild.append(code);
     }
+    if (booking.status === "paid") {
+      try {
+        const { tickets } = await requestJson(`/api/account/bookings/${encodeURIComponent(booking.id)}/tickets`, { headers: dashboardHeaders() });
+        for (const ticket of tickets) {
+          const ticketCard = document.createElement("div");
+          ticketCard.className = "account-ticket-qr";
+          const qr = document.createElement("img");
+          qr.src = ticket.qrCode;
+          qr.alt = `QR code for ticket ${ticket.number}`;
+          const number = document.createElement("small");
+          number.textContent = `Ticket ${ticket.number}${ticket.checkedInAt ? " · Already used" : ""}`;
+          ticketCard.append(qr, number);
+          row.firstChild.append(ticketCard);
+        }
+      } catch (error) {
+        const qrError = document.createElement("small");
+        qrError.textContent = `Ticket QR unavailable: ${error.message}`;
+        row.firstChild.append(qrError);
+      }
+    }
     list.append(row);
-  });
+  }
 }
 
 async function loadOrganizerDashboard() {

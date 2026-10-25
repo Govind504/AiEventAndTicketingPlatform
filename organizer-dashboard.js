@@ -5,6 +5,11 @@ const editDialog = document.querySelector("#edit-event-dialog");
 const editForm = document.querySelector("#edit-event-form");
 let currentUser;
 let dashboardEvents = [];
+let selectedScanEventId;
+let cameraStream;
+let scanAnimationFrame;
+let scanBusy = false;
+let detector;
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
@@ -87,6 +92,7 @@ function renderEvents(events, salesById) {
     details.append(title, venue, startsAt, metrics);
 
     const actions = document.createElement("div");
+    actions.className = "organizer-event-actions";
     const status = document.createElement("p");
     status.className = "event-status";
     status.textContent = event.status;
@@ -95,10 +101,114 @@ function renderEvents(events, salesById) {
     edit.className = "text-button";
     edit.textContent = "Edit event";
     edit.addEventListener("click", () => openEditForm(event));
-    actions.append(status, edit);
+    const scan = document.createElement("button");
+    scan.type = "button";
+    scan.className = "text-button";
+    scan.textContent = "Scan tickets";
+    scan.addEventListener("click", () => openTicketScanner(event));
+    actions.append(status, edit, scan);
     card.append(image, details, actions);
     list.append(card);
   }
+}
+
+async function openTicketScanner(event) {
+  scanBusy = false;
+  selectedScanEventId = event._id;
+  document.querySelector("#scanner-event-title").textContent = `Scan tickets · ${event.title}`;
+  const result = document.querySelector("#ticket-scanner-result");
+  result.dataset.state = "";
+  result.textContent = "Starting camera…";
+  document.querySelector("#scan-next-ticket").hidden = true;
+  document.querySelector("#stop-ticket-scanner").hidden = false;
+  document.querySelector("#ticket-scanner-dialog").showModal();
+
+  if (!("BarcodeDetector" in window)) {
+    result.dataset.state = "error";
+    result.textContent = "QR scanning is not supported by this browser. Use a recent Chrome browser on a phone or laptop.";
+    document.querySelector("#stop-ticket-scanner").hidden = true;
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    result.dataset.state = "error";
+    result.textContent = "Camera access requires HTTPS and browser camera permission.";
+    document.querySelector("#stop-ticket-scanner").hidden = true;
+    return;
+  }
+
+  try {
+    detector = new BarcodeDetector({ formats: ["qr_code"] });
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+    if (!document.querySelector("#ticket-scanner-dialog").open) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      cameraStream = null;
+      return;
+    }
+    const video = document.querySelector("#ticket-scanner-video");
+    video.srcObject = cameraStream;
+    await video.play();
+    result.textContent = "Camera ready. Point it at a Gather ticket QR code.";
+    scanForTicket();
+  } catch (error) {
+    result.dataset.state = "error";
+    result.textContent = error.name === "NotAllowedError"
+      ? "Camera permission was denied. Allow camera access in your browser and try again."
+      : "Could not open the camera. Check camera permission and try again.";
+    stopCamera();
+  }
+}
+
+function stopCamera() {
+  cancelAnimationFrame(scanAnimationFrame);
+  scanAnimationFrame = null;
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((track) => track.stop());
+    cameraStream = null;
+  }
+  const video = document.querySelector("#ticket-scanner-video");
+  video.pause();
+  video.srcObject = null;
+}
+
+function scanForTicket() {
+  const video = document.querySelector("#ticket-scanner-video");
+  const detectNext = async () => {
+    if (!cameraStream) return;
+    if (!scanBusy && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      try {
+        const [barcode] = await detector.detect(video);
+        if (barcode?.rawValue) {
+          scanBusy = true;
+          await submitTicketScan(barcode.rawValue);
+        }
+      } catch {
+        const result = document.querySelector("#ticket-scanner-result");
+        result.dataset.state = "error";
+        result.textContent = "Could not read that QR code. Center it in the camera and try scanning again.";
+      }
+    }
+    scanAnimationFrame = requestAnimationFrame(detectNext);
+  };
+  scanAnimationFrame = requestAnimationFrame(detectNext);
+}
+
+async function submitTicketScan(payload) {
+  const result = document.querySelector("#ticket-scanner-result");
+  try {
+    const data = await requestJson(`/api/organizer/events/${encodeURIComponent(selectedScanEventId)}/scan`, {
+      method: "POST",
+      body: { ticket: payload }
+    });
+    result.dataset.state = "success";
+    result.textContent = `Successful entry · Ticket ${data.ticketNumber} · ${data.eventTitle}`;
+  } catch (error) {
+    result.dataset.state = "error";
+    result.textContent = error.message;
+  }
+  document.querySelector("#scan-next-ticket").hidden = false;
 }
 
 function openEditForm(event) {
@@ -220,6 +330,30 @@ document.querySelector("#close-edit-dialog").addEventListener("click", () => edi
 editDialog.addEventListener("click", (event) => {
   if (event.target === editDialog) editDialog.close();
 });
+
+document.querySelector("#scan-next-ticket").addEventListener("click", () => {
+  scanBusy = false;
+  document.querySelector("#scan-next-ticket").hidden = true;
+  const result = document.querySelector("#ticket-scanner-result");
+  result.dataset.state = "";
+  result.textContent = "Ready. Scan the next ticket.";
+});
+
+document.querySelector("#stop-ticket-scanner").addEventListener("click", () => {
+  stopCamera();
+  document.querySelector("#ticket-scanner-dialog").close();
+});
+document.querySelector("#close-scanner-dialog").addEventListener("click", () => {
+  stopCamera();
+  document.querySelector("#ticket-scanner-dialog").close();
+});
+document.querySelector("#ticket-scanner-dialog").addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) {
+    stopCamera();
+    event.currentTarget.close();
+  }
+});
+document.querySelector("#ticket-scanner-dialog").addEventListener("close", stopCamera);
 
 document.querySelector("#dashboard-signout").addEventListener("click", async () => {
   try {

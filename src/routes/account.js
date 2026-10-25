@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const Order = require("../models/Order");
+const { ticketPresentations } = require("../lib/tickets");
+const { settlePaidOrder } = require("../lib/orders");
 const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -55,6 +57,20 @@ router.get("/dashboard", requireAuth, async (request, response) => {
       createdAt: order.createdAt
     }))
   });
+});
+
+router.get("/bookings/:orderId/tickets", requireAuth, async (request, response) => {
+  if (!mongoose.isValidObjectId(request.params.orderId)) {
+    return response.status(404).json({ error: "Booking not found" });
+  }
+  const order = await Order.findOne({
+    _id: request.params.orderId,
+    user: request.user._id,
+    status: "paid"
+  }).select("_id");
+  if (!order) return response.status(404).json({ error: "Booking not found" });
+  await settlePaidOrder(order._id);
+  response.json({ tickets: await ticketPresentations(order._id) });
 });
 
 module.exports = router;
