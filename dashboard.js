@@ -104,28 +104,38 @@ function showRole(role) {
 async function loadClientDashboard() {
   const data = await requestJson("/api/account/dashboard", { headers: dashboardHeaders() });
   renderMetricCards(document.querySelector("#client-metrics"), [
-    { label: "Events booked", value: data.summary.bookingCount },
-    { label: "Tickets booked", value: data.summary.ticketsBooked },
+    { label: "Bookings and requests", value: data.summary.bookingCount },
+    { label: "Seats and tickets", value: data.summary.ticketsBooked },
     { label: "Total spent", value: money(data.summary.spentCents) }
   ]);
   const list = document.querySelector("#client-bookings");
   list.replaceChildren();
   if (data.bookings.length === 0) {
-    list.append(makeRow("No bookings yet", "Your event tickets will appear here."));
+    list.append(makeRow("No bookings yet", "Your movie tickets, dining requests, and event tickets will appear here."));
     return;
   }
   for (const booking of data.bookings) {
-    const venueAndDate = booking.event ? `${booking.event.venue}, ${booking.event.city} · ${friendlyDate(booking.event.startsAt)}` : "Event details unavailable";
+    const venueAndDate = booking.type === "event" && booking.event
+      ? `${booking.event.venue}, ${booking.event.city} · ${friendlyDate(booking.event.startsAt)}`
+      : booking.type === "movie"
+        ? `${booking.venue}, ${booking.city} · ${friendlyDate(booking.startsAt)} · Seats ${booking.seats.join(", ")}`
+        : booking.type === "dining"
+          ? `${booking.venue}, ${booking.city} · ${friendlyDate(booking.startsAt)} · Party of ${booking.partySize}`
+          : "Booking details unavailable";
     const label = booking.status === "paid"
-      ? `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)}`
-      : booking.status;
-    const row = makeRow(booking.event?.title || "Event unavailable", venueAndDate, label);
+      ? booking.type === "movie"
+        ? `${booking.seats.length} seats · ${money(booking.totalCents)}`
+        : `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)}`
+      : booking.type === "dining" && booking.status === "requested"
+        ? "Reservation request · No payment collected"
+        : booking.status;
+    const row = makeRow(booking.type === "event" ? booking.event?.title || "Event unavailable" : booking.title, venueAndDate, label);
     if (booking.ticketCode) {
       const code = document.createElement("small");
       code.textContent = `Booking code: ${booking.ticketCode}`;
       row.firstChild.append(code);
     }
-    if (booking.status === "paid") {
+    if (booking.type === "event" && booking.status === "paid") {
       try {
         const { tickets } = await requestJson(`/api/account/bookings/${encodeURIComponent(booking.id)}/tickets`, { headers: dashboardHeaders() });
         for (const ticket of tickets) {
@@ -165,10 +175,11 @@ async function loadOrganizerDashboard() {
 }
 
 async function loadAdminDashboard() {
-  const [data, usersPage, ordersPage] = await Promise.all([
+  const [data, usersPage, ordersPage, catalog] = await Promise.all([
     requestJson("/api/admin/dashboard", { headers: dashboardHeaders() }),
     requestJson("/api/admin/users?page=1", { headers: dashboardHeaders() }),
-    requestJson("/api/admin/orders?page=1", { headers: dashboardHeaders() })
+    requestJson("/api/admin/orders?page=1", { headers: dashboardHeaders() }),
+    requestJson("/api/admin/catalog", { headers: dashboardHeaders() })
   ]);
   renderMetricCards(document.querySelector("#admin-metrics"), [
     { label: "Accounts", value: data.summary.userCount },
@@ -200,7 +211,282 @@ async function loadAdminDashboard() {
   ordersPage.orders.forEach((order) => ordersList.append(makeRow(order.eventTitle, `${order.email} · ${friendlyDate(order.createdAt)} · ${order.quantity} ticket(s) · ${money(order.totalCents)}`, order.status)));
   nextOrdersPage = ordersPage.nextPage;
   document.querySelector("#admin-orders-more").hidden = nextOrdersPage === null;
+  renderAdminCatalog(catalog);
 }
+
+function addCatalogAction(row, label, handler) {
+  const button = document.createElement("button");
+  button.className = "text-button";
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", handler);
+  row.append(button);
+}
+
+function showAdminCatalogMessage(message) {
+  const target = document.querySelector("#dashboard-error");
+  target.textContent = message;
+  target.hidden = !message;
+}
+
+function renderAdminCatalog(data) {
+  showAdminCatalogMessage("");
+  const bookingList = document.querySelector("#admin-movie-bookings");
+  bookingList.replaceChildren();
+  if (!data.bookings.length) bookingList.append(makeRow("No movie bookings", "Confirmed and pending movie seat bookings will appear here."));
+  for (const booking of data.bookings) {
+    bookingList.append(makeRow(
+      booking.movie,
+      `${booking.email} · ${booking.cinema} · ${booking.startsAt ? friendlyDate(booking.startsAt) : "Showtime unavailable"} · Seats ${booking.seats.join(", ")} · ${money(booking.totalCents)}`,
+      booking.status
+    ));
+  }
+  const movieList = document.querySelector("#admin-movies");
+  movieList.replaceChildren();
+  if (!data.movies.length) movieList.append(makeRow("No movies listed", "Add a movie below to start your catalog."));
+  for (const movie of data.movies) {
+    const row = makeRow(movie.title, `${movie.languages.join(", ")} · ${movie.durationMinutes} min`, movie.status);
+    addCatalogAction(row, "Edit", () => {
+      const form = document.querySelector("#admin-movie-form");
+      form.elements.movieId.value = movie.id;
+      form.elements.title.value = movie.title;
+      form.elements.description.value = movie.description;
+      form.elements.genres.value = movie.genres.join(", ");
+      form.elements.languages.value = movie.languages.join(", ");
+      form.elements.durationMinutes.value = movie.durationMinutes;
+      form.elements.certificate.value = movie.certificate;
+      form.elements.posterUrl.value = movie.posterUrl;
+      form.elements.status.value = movie.status;
+      form.querySelector("h4").textContent = `Edit: ${movie.title}`;
+      form.querySelector("button[type=submit]").textContent = "Save movie changes";
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    movieList.append(row);
+  }
+
+  const movieSelect = document.querySelector("#admin-showtime-form").elements.movieId;
+  const selectedMovieId = movieSelect.value;
+  const selectableMovies = data.movies.filter((movie) => movie.status !== "archived");
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.disabled = true;
+  placeholder.textContent = selectableMovies.length ? "Choose a movie" : "Add a movie first";
+  movieSelect.replaceChildren(placeholder, ...selectableMovies.map((movie) => {
+    const option = document.createElement("option");
+    option.value = movie.id;
+    option.textContent = movie.title;
+    return option;
+  }));
+  if (data.movies.some((movie) => movie.id === selectedMovieId)) movieSelect.value = selectedMovieId;
+
+  const showtimeList = document.querySelector("#admin-showtimes");
+  showtimeList.replaceChildren();
+  if (!data.showtimes.length) showtimeList.append(makeRow("No showtimes yet", "Create showtimes for published movies."));
+  for (const showtime of data.showtimes) {
+    const row = makeRow(showtime.movieTitle, `${showtime.cinema} · ${showtime.city} · ${friendlyDate(showtime.startsAt)} · ${showtime.bookedCount}/${showtime.seatCount} seats sold`, showtime.status);
+    addCatalogAction(row, "Edit", () => {
+      const form = document.querySelector("#admin-showtime-form");
+      form.elements.showtimeId.value = showtime.id;
+      form.elements.movieId.value = showtime.movieId;
+      form.elements.cinema.value = showtime.cinema;
+      form.elements.screen.value = showtime.screen;
+      form.elements.address.value = showtime.address;
+      form.elements.city.value = showtime.city;
+      form.elements.state.value = showtime.state;
+      const startsAt = new Date(showtime.startsAt);
+      const localDate = new Date(startsAt.getTime() - startsAt.getTimezoneOffset() * 60000);
+      form.elements.startsAt.value = localDate.toISOString().slice(0, 16);
+      form.elements.price.value = (showtime.priceCents / 100).toFixed(2);
+      form.elements.seatLabels.value = showtime.seatLabels.join(", ");
+      form.querySelector("h4").textContent = `Edit showtime: ${showtime.movieTitle}`;
+      form.querySelector("button[type=submit]").textContent = "Save showtime changes";
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    addCatalogAction(row, showtime.status === "live" ? "Cancel" : "Reopen", async () => {
+      try {
+        await requestJson(`/api/admin/catalog/showtimes/${encodeURIComponent(showtime.id)}/status`, {
+          method: "PATCH",
+          body: { status: showtime.status === "live" ? "cancelled" : "live" }
+        });
+        await loadAdminCatalog();
+      } catch (error) {
+        showAdminCatalogMessage(error.message);
+      }
+    });
+    showtimeList.append(row);
+  }
+
+  const restaurantList = document.querySelector("#admin-restaurants");
+  restaurantList.replaceChildren();
+  if (!data.restaurants.length) restaurantList.append(makeRow("No restaurants listed", "Add a restaurant below to start taking requests."));
+  for (const restaurant of data.restaurants) {
+    const row = makeRow(restaurant.name, `${restaurant.cuisine} · ${restaurant.address}, ${restaurant.city}`, restaurant.status);
+    addCatalogAction(row, "Edit", () => {
+      const form = document.querySelector("#admin-restaurant-form");
+      form.elements.restaurantId.value = restaurant.id;
+      form.elements.name.value = restaurant.name;
+      form.elements.description.value = restaurant.description;
+      form.elements.cuisine.value = restaurant.cuisine;
+      form.elements.priceLevel.value = restaurant.priceLevel;
+      form.elements.address.value = restaurant.address;
+      form.elements.city.value = restaurant.city;
+      form.elements.state.value = restaurant.state;
+      form.elements.phone.value = restaurant.phone || "";
+      form.elements.imageUrl.value = restaurant.imageUrl;
+      form.elements.status.value = restaurant.status;
+      form.querySelector("h4").textContent = `Edit: ${restaurant.name}`;
+      form.querySelector("button[type=submit]").textContent = "Save restaurant changes";
+      form.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    restaurantList.append(row);
+  }
+
+  const reservationList = document.querySelector("#admin-dining-reservations");
+  reservationList.replaceChildren();
+  if (!data.reservations.length) reservationList.append(makeRow("No reservation requests", "New customer requests will show here."));
+  for (const reservation of data.reservations) {
+    const row = makeRow(`${reservation.restaurant} · ${reservation.name}`, `${reservation.partySize} guests · ${friendlyDate(reservation.requestedFor)} · ${reservation.email} · ${reservation.phone}${reservation.note ? ` · ${reservation.note}` : ""}`, reservation.status);
+    if (reservation.status === "requested") {
+      addCatalogAction(row, "Confirm", () => updateReservationStatus(reservation.id, "confirmed"));
+      addCatalogAction(row, "Decline", () => updateReservationStatus(reservation.id, "declined"));
+    }
+    reservationList.append(row);
+  }
+}
+
+async function loadAdminCatalog() {
+  const catalog = await requestJson("/api/admin/catalog", { headers: dashboardHeaders() });
+  renderAdminCatalog(catalog);
+}
+
+async function updateReservationStatus(id, status) {
+  try {
+    await requestJson(`/api/admin/catalog/dining-reservations/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: { status }
+    });
+    await loadAdminCatalog();
+  } catch (error) {
+    showAdminCatalogMessage(error.message);
+  }
+}
+
+function resetCatalogForm(form, title, submitLabel) {
+  form.reset();
+  form.elements[form.id === "admin-movie-form" ? "movieId" : "restaurantId"].value = "";
+  form.querySelector("h4").textContent = title;
+  form.querySelector("button[type=submit]").textContent = submitLabel;
+}
+
+document.querySelector("#admin-movie-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const values = Object.fromEntries(new FormData(form));
+  const id = values.movieId;
+  const body = {
+    title: values.title,
+    description: values.description,
+    genres: values.genres.split(",").map((value) => value.trim()).filter(Boolean),
+    languages: values.languages.split(",").map((value) => value.trim()).filter(Boolean),
+    durationMinutes: Number(values.durationMinutes),
+    certificate: values.certificate,
+    posterUrl: values.posterUrl,
+    status: values.status
+  };
+  const note = document.querySelector("#admin-movie-note");
+  try {
+    await requestJson(id ? `/api/admin/catalog/movies/${encodeURIComponent(id)}` : "/api/admin/catalog/movies", {
+      method: id ? "PATCH" : "POST",
+      headers: dashboardHeaders(),
+      body
+    });
+    note.textContent = "Movie saved.";
+    resetCatalogForm(form, "Add a movie", "Save movie");
+    await loadAdminCatalog();
+  } catch (error) {
+    note.textContent = error.message;
+  }
+});
+
+document.querySelector("#admin-showtime-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const values = Object.fromEntries(new FormData(form));
+  const id = values.showtimeId;
+  const note = document.querySelector("#admin-showtime-note");
+  try {
+    const body = {
+      cinema: values.cinema,
+      screen: values.screen,
+      address: values.address,
+      city: values.city,
+      state: values.state,
+      startsAt: new Date(values.startsAt).toISOString(),
+      priceCents: Math.round(Number(values.price) * 100),
+      seatLabels: values.seatLabels.split(",").map((value) => value.trim().toUpperCase()).filter(Boolean)
+    };
+    if (!id) body.movieId = values.movieId;
+    await requestJson(id ? `/api/admin/catalog/showtimes/${encodeURIComponent(id)}` : "/api/admin/catalog/showtimes", {
+      method: id ? "PATCH" : "POST",
+      headers: dashboardHeaders(),
+      body
+    });
+    note.textContent = "Showtime saved.";
+    form.reset();
+    form.querySelector("h4").textContent = "Add a showtime";
+    form.querySelector("button[type=submit]").textContent = "Save showtime";
+    await loadAdminCatalog();
+  } catch (error) {
+    note.textContent = error.message;
+  }
+});
+
+document.querySelector("#admin-restaurant-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const values = Object.fromEntries(new FormData(form));
+  const id = values.restaurantId;
+  const note = document.querySelector("#admin-restaurant-note");
+  try {
+    await requestJson(id ? `/api/admin/catalog/restaurants/${encodeURIComponent(id)}` : "/api/admin/catalog/restaurants", {
+      method: id ? "PATCH" : "POST",
+      headers: dashboardHeaders(),
+      body: {
+        name: values.name,
+        description: values.description,
+        cuisine: values.cuisine,
+        priceLevel: Number(values.priceLevel),
+        address: values.address,
+        city: values.city,
+        state: values.state,
+        phone: values.phone,
+        imageUrl: values.imageUrl,
+        status: values.status
+      }
+    });
+    note.textContent = "Restaurant saved.";
+    resetCatalogForm(form, "Add a restaurant", "Save restaurant");
+    await loadAdminCatalog();
+  } catch (error) {
+    note.textContent = error.message;
+  }
+});
+
+document.querySelectorAll("[data-cancel-catalog-edit]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const type = button.dataset.cancelCatalogEdit;
+    if (type === "showtime") {
+      const form = document.querySelector("#admin-showtime-form");
+      form.reset();
+      form.querySelector("h4").textContent = "Add a showtime";
+      form.querySelector("button[type=submit]").textContent = "Save showtime";
+      return;
+    }
+    const isMovie = type === "movie";
+    const form = document.querySelector(isMovie ? "#admin-movie-form" : "#admin-restaurant-form");
+    resetCatalogForm(form, isMovie ? "Add a movie" : "Add a restaurant", isMovie ? "Save movie" : "Save restaurant");
+  });
+});
 
 async function loadMoreAdminRows(type) {
   const isUsers = type === "users";
@@ -406,6 +692,10 @@ dashboardDialog.addEventListener("click", (event) => {
 
 (function openRequestedAuthDialog() {
   const params = new URLSearchParams(window.location.search);
+  if (params.get("admin") === "1") {
+    openDashboard();
+    return;
+  }
   if (params.get("signin") !== "1" && params.get("host") !== "1") return;
   organizerSignup = params.get("host") === "1";
   if (params.get("signin") === "1") setAuthMode("login");

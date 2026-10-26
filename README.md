@@ -1,6 +1,6 @@
 # Gather
 
-Gather is an event discovery and ticketing app built with Node.js, Express, MongoDB, and Razorpay Checkout. MongoDB is a NoSQL document database; this project does not use a SQL database.
+Gather is an India-focused discovery and booking app for live events, movies, and dining. It is built with Node.js, Express, MongoDB, and Razorpay Checkout. MongoDB is a NoSQL document database; this project does not use a SQL database.
 
 ## Run locally
 
@@ -30,6 +30,10 @@ The sample event dates are seeded once. The seed script includes three events in
 ## Included flows
 
 - Public event listing, search, category filtering, and price sorting from MongoDB.
+- Separate Events, Movies, and Dining discovery tabs, filtered by the selected city. Chandigarh is the first-visit location; existing user-created event records are retained.
+- Admin-managed movie and restaurant listings. Admins add movies, future cinema showtimes, seat labels, prices, restaurants, and listing visibility from the account workspace.
+- Movie bookings include live seat availability and a 15-minute seat hold. Razorpay payment is verified server-side before the selected seats are confirmed; booking status is visible in the signed-in account dashboard.
+- Dining reservations are requests for restaurant confirmation. Customers choose a party size and future date/time; Gather does not collect advance restaurant payment. Admins can confirm or decline requests in the account workspace.
 - The landing-page hero automatically rotates through event photos, with previous/next, direct-slide, and pause controls; it pauses on hover/focus and respects reduced-motion preferences.
 - Primary actions and account/location controls use consistent, high-contrast button styling with visible keyboard focus states.
 - Registration data, bcrypt password hashes, and server-managed authentication sessions stored in MongoDB. The browser receives only an HttpOnly session cookie; each request is authenticated against the MongoDB session and user records.
@@ -76,6 +80,10 @@ Expired reservations are cleaned locally by the development server and on Vercel
 - `GET /api/account/dashboard`, `GET /api/account/saved-events`, `PUT|DELETE /api/account/saved-events/:eventId` (signed-in clients)
 - `GET /api/organizer/dashboard`, `GET|POST /api/organizer/events`, `PATCH|DELETE /api/organizer/events/:id`
 - `GET /api/admin/dashboard`, `GET /api/admin/users?page=1`, `GET /api/admin/orders?page=1`, `PATCH /api/admin/events/:id` (administrator only; user and order lists are paginated)
+- `GET /api/catalog/movies?city=Chandigarh&state=Chandigarh`, `GET /api/catalog/restaurants?city=Chandigarh&state=Chandigarh`
+- `POST /api/movie-bookings/session`, `POST /api/movie-bookings/verify` (seat hold and verified Razorpay checkout)
+- `POST /api/catalog/dining-reservations` (reservation request; no payment)
+- `GET /api/admin/catalog`, `POST|PATCH /api/admin/catalog/movies`, `POST|PATCH /api/admin/catalog/showtimes`, `POST|PATCH /api/admin/catalog/restaurants`, `PATCH /api/admin/catalog/dining-reservations/:id` (administrator only)
 - `POST /api/checkout/session`, `POST /api/checkout/verify`
 - `GET /api/account/bookings/:orderId/tickets` (signed-in booking owner)
 - `POST /api/organizer/events/:eventId/scan` (organizer who owns that event)

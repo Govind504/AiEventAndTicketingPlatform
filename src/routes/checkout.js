@@ -7,6 +7,7 @@ const Order = require("../models/Order");
 const { getCapturedPayment, getRazorpay, verifyPaymentSignature } = require("../lib/razorpay");
 const { releasePendingOrder, settlePaidOrder } = require("../lib/orders");
 const { isTicketSigningConfigured, ticketPresentations } = require("../lib/tickets");
+const retiredSampleSlugs = require("../lib/retired-sample-events");
 const { optionalAuth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -30,7 +31,7 @@ router.post("/session", optionalAuth, async (request, response) => {
   if (request.user && input.email.toLowerCase() !== request.user.email) {
     return response.status(403).json({ error: "Use the email address on your signed-in account" });
   }
-  const event = await Event.findOne({ _id: input.eventId, status: "live", startsAt: { $gt: new Date() } });
+  const event = await Event.findOne({ _id: input.eventId, status: "live", startsAt: { $gt: new Date() }, slug: { $nin: retiredSampleSlugs } });
   if (!event) return response.status(404).json({ error: "This event is no longer available" });
 
   const razorpay = event.priceCents > 0 ? getRazorpay() : null;

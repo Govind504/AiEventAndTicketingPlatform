@@ -47,7 +47,8 @@ let heroTimer;
 let heroPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let heroHoverPaused = false;
 let heroFocusPaused = false;
-let currentLocation = { city: "Portland", state: "OR" };
+let currentLocation = { city: "Chandigarh", state: "Chandigarh" };
+window.gatherLocation = currentLocation;
 let locationSearchTimer;
 let locationSearchController;
 let locationSearchRequestId = 0;
@@ -74,13 +75,18 @@ try {
       city: savedLocation.city.trim().slice(0, 80),
       state: typeof savedLocation.state === "string" ? savedLocation.state.trim().slice(0, 40) : ""
     };
+    if (currentLocation.city.toLowerCase() === "portland" && currentLocation.state.toUpperCase() === "OR") {
+      currentLocation = { city: "Chandigarh", state: "Chandigarh" };
+      localStorage.setItem("gather-location", JSON.stringify(currentLocation));
+    }
   }
 } catch {
-  currentLocation = { city: "Portland", state: "OR" };
+  currentLocation = { city: "Chandigarh", state: "Chandigarh" };
 }
+window.gatherLocation = currentLocation;
 
 function renderCurrentLocation() {
-  const label = currentLocation.state
+  const label = currentLocation.state && currentLocation.state.toLowerCase() !== currentLocation.city.toLowerCase()
     ? `${currentLocation.city}, ${currentLocation.state}`
     : currentLocation.city;
   document.querySelector("#current-location-label").textContent = label;
@@ -328,6 +334,7 @@ async function useCurrentLocation() {
 async function selectLocation(city, state) {
   if (!city) return;
   currentLocation = { city, state };
+  window.gatherLocation = currentLocation;
   try {
     localStorage.setItem("gather-location", JSON.stringify(currentLocation));
   } catch {
@@ -336,6 +343,7 @@ async function selectLocation(city, state) {
   renderCurrentLocation();
   locationDialog.close();
   await loadEvents();
+  if (window.gatherRefreshCatalog) await window.gatherRefreshCatalog();
   document.querySelector("#events").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -420,6 +428,7 @@ function filteredEvents() {
 
 function renderEvents() {
   const results = filteredEvents();
+  document.querySelector('.category-chip[data-category="all"] span').textContent = String(events.length).padStart(2, "0");
   resultsCount.textContent = `Showing ${results.length} ${results.length === 1 ? "plan" : "plans"}`;
   emptyState.hidden = results.length > 0;
   emptyState.textContent = savedOnly

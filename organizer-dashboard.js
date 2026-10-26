@@ -140,18 +140,28 @@ async function renderAccountBookings(bookings) {
     const card = document.createElement("article");
     card.className = "account-booking";
     const title = document.createElement("h3");
-    title.textContent = booking.event?.title || "Event details unavailable";
+    title.textContent = booking.type === "event"
+      ? booking.event?.title || "Event details unavailable"
+      : booking.title || "Booking details unavailable";
     const details = document.createElement("p");
-    details.textContent = booking.event
+    details.textContent = booking.type === "event" && booking.event
       ? `${booking.event.venue}, ${booking.event.city} · ${dateTime(booking.event.startsAt, Intl.DateTimeFormat().resolvedOptions().timeZone)}`
-      : "Event details are unavailable.";
+      : booking.type === "dining"
+        ? `${booking.venue}, ${booking.city} · ${dateTime(booking.startsAt, Intl.DateTimeFormat().resolvedOptions().timeZone)} · Table for ${booking.partySize}`
+        : booking.type === "movie"
+          ? `${booking.venue}, ${booking.city} · ${dateTime(booking.startsAt, Intl.DateTimeFormat().resolvedOptions().timeZone)} · Seats ${booking.seats.join(", ")}`
+          : "Event details are unavailable.";
     const status = document.createElement("p");
     status.textContent = booking.status === "paid"
-      ? `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)} · Confirmed`
-      : `Booking status: ${booking.status}`;
+      ? booking.type === "movie"
+        ? `${booking.seats.length} ${booking.seats.length === 1 ? "seat" : "seats"} · ${money(booking.totalCents)} · Confirmed`
+        : `${booking.quantity} ${booking.quantity === 1 ? "ticket" : "tickets"} · ${money(booking.totalCents)} · Confirmed`
+      : booking.type === "dining" && booking.status === "requested"
+        ? "Reservation requested · No payment collected"
+        : `Booking status: ${booking.status}`;
     card.append(title, details, status);
 
-    if (booking.status === "paid") {
+    if (booking.type === "event" && booking.status === "paid") {
       const ticketList = document.createElement("div");
       ticketList.className = "account-booking-tickets";
       try {
@@ -317,6 +327,12 @@ async function loadDashboard() {
     await renderAccountBookings(bookings);
     return;
   }
+
+  if (user.role === "admin") {
+    window.location.replace("/?admin=1");
+    return;
+  }
+
   if (user.role !== "organizer") {
     throw new Error("This dashboard is for organizer accounts. Use the admin console from your account workspace.");
   }

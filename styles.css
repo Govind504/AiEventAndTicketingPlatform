@@ -338,3 +338,36 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+.catalog-type-tabs { display: flex; gap: 7px; }
+.catalog-type-tab { min-height: 38px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.catalog-type-tab.selected { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.category-list[hidden], .sort-label[hidden], .event-grid[hidden], .catalog-grid[hidden] { display: none; }
+.catalog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.catalog-card { overflow: hidden; background: #fff; box-shadow: 0 8px 30px rgba(25, 42, 32, .07); animation: rise-in .4s both; }
+.catalog-card > img { display: block; width: 100%; height: 235px; object-fit: cover; background: #d9ded5; }
+.catalog-card-content { display: grid; gap: 10px; padding: 18px; }
+.catalog-card-content h3 { margin: 0; font-family: var(--display); font-size: 22px; }
+.catalog-card-content p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.catalog-card-content .event-category { color: var(--coral); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.catalog-card-content .event-book { margin-top: 7px; }
+.catalog-dialog { position: fixed; width: min(620px, calc(100% - 32px)); max-height: min(92vh, 820px); padding: 30px; border: 0; background: var(--paper); color: var(--ink); box-shadow: 0 25px 100px rgba(9, 16, 12, .28); overflow: auto; }
+.catalog-dialog::backdrop { background: rgba(15, 24, 19, .66); backdrop-filter: blur(3px); }
+.catalog-dialog-content { display: grid; gap: 14px; padding-top: 12px; }
+.catalog-dialog-content h2 { margin: 0; font-family: var(--display); font-size: 29px; }
+.movie-seat-grid { display: grid; grid-template-columns: repeat(8, minmax(32px, 1fr)); gap: 7px; max-height: 220px; overflow: auto; padding: 10px 0; }
+.movie-seat { min-height: 35px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 10px; font-weight: 700; cursor: pointer; }
+.movie-seat.selected { border-color: var(--ink); background: var(--green); color: var(--ink); }
+.movie-seat.unavailable { background: #d5d8d1; color: #888; text-decoration: line-through; cursor: not-allowed; }
+.catalog-admin-form { margin: 18px 0 28px; padding: 20px; background: #f1f2ec; }
+.catalog-admin-form h4 { margin: 0; font-family: var(--display); font-size: 18px; }
+@media (max-width: 760px) {
+  .discovery-tools { align-items: flex-start; flex-direction: column; }
+  .catalog-type-tabs { width: 100%; overflow-x: auto; }
+  .catalog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .catalog-grid { grid-template-columns: 1fr; }
+  .catalog-card > img { height: 220px; }
+  .catalog-dialog { padding: 24px 18px; }
+  .movie-seat-grid { grid-template-columns: repeat(6, minmax(30px, 1fr)); }
+}

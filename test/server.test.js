@@ -45,6 +45,19 @@ test("dashboard client script is served", async () => {
   assert.match(response.headers.get("content-type"), /javascript/);
 });
 
+test("catalog client script and category controls are served", async () => {
+  const script = await fetch(`${baseUrl}/catalog.js`);
+  assert.equal(script.status, 200);
+  assert.match(script.headers.get("content-type"), /javascript/);
+  assert.match(await script.text(), /startMovieCheckout/);
+  const page = await fetch(baseUrl);
+  const html = await page.text();
+  assert.match(html, /data-catalog-type="movies"/);
+  assert.match(html, /data-catalog-type="dining"/);
+  assert.match(html, /id="movie-seats"/);
+  assert.match(html, /id="dining-reservation-form"/);
+});
+
 test("home page has a location picker and free Google Maps venue links", async () => {
   const page = await fetch(`${baseUrl}/`);
   const pageHtml = await page.text();
@@ -109,6 +122,10 @@ test("account, organizer, and administrator dashboards require authentication", 
     "/api/admin/dashboard",
     "/api/admin/users?page=1",
     "/api/admin/orders?page=1",
+    "/api/admin/catalog",
+    "/api/admin/catalog/movies",
+    "/api/admin/catalog/movies",
+    "/api/catalog/dining-reservations",
     "/api/organizer/events/507f1f77bcf86cd799439011/scan"
   ]) {
     const response = await fetch(`${baseUrl}${route}`);

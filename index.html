@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f5f6f0">
-    <meta name="description" content="Find the little nights and big moments happening around Portland. Discover events and reserve your spot with Gather.">
+    <meta name="description" content="Find events, movie tickets, and great places to eat around India with Gather.">
     <title>Gather — Good plans start here</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
         <a class="nav-link" href="#host">For hosts</a>
       </nav>
       <div class="header-actions">
-        <button class="location-button" id="location-picker-button" type="button" aria-label="Change event location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span id="current-location-label">Portland, OR</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+        <button class="location-button" id="location-picker-button" type="button" aria-label="Change event location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span id="current-location-label">Chandigarh, India</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
         <a class="saved-link" href="#events" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8Z"/></svg><span>Saved</span></a>
         <a class="text-button account-button" href="/dashboard">My dashboard</a>
         <a class="host-button" href="#host" data-open-host>List an event <span aria-hidden="true">↗</span></a>
@@ -61,6 +61,11 @@
         </div>
 
         <div class="discovery-tools">
+          <div class="catalog-type-tabs" role="group" aria-label="Browse Gather">
+            <button type="button" class="catalog-type-tab selected" data-catalog-type="events" aria-pressed="true">Events</button>
+            <button type="button" class="catalog-type-tab" data-catalog-type="movies" aria-pressed="false">Movies</button>
+            <button type="button" class="catalog-type-tab" data-catalog-type="dining" aria-pressed="false">Dining</button>
+          </div>
           <div class="category-list" role="group" aria-label="Filter events by category">
             <button class="category-chip selected" type="button" data-category="all" aria-pressed="true">Everything <span>08</span></button>
             <button class="category-chip" type="button" data-category="music" aria-pressed="false">Music</button>
@@ -73,6 +78,8 @@
 
         <div class="results-line"><span id="results-count" aria-live="polite">Showing 8 plans</span><label class="sort-label" for="sort-events">Sort by <select id="sort-events"><option value="soonest">Soonest</option><option value="price-low">Price: low to high</option></select></label></div>
         <div class="event-grid" id="event-grid" aria-live="polite"></div>
+        <div class="catalog-grid" id="movie-grid" aria-live="polite" hidden></div>
+        <div class="catalog-grid" id="restaurant-grid" aria-live="polite" hidden></div>
         <p class="empty-state" id="empty-state" hidden>No plans found. Try another search or category.</p>
         <div class="more-events"><span>THAT'S A GOOD START</span><span class="more-rule"></span><a href="#host">Got something for us? <span aria-hidden="true">↗</span></a></div>
       </section>
@@ -95,7 +102,7 @@
       </section>
     </main>
 
-    <footer class="site-footer"><a class="wordmark footer-wordmark" href="#top"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a><span>Go where the good stuff happens.</span><a href="mailto:hello@gather.events">Say hello <span aria-hidden="true">↗</span></a><span class="footer-year">PORTLAND · 2026</span></footer>
+    <footer class="site-footer"><a class="wordmark footer-wordmark" href="#top"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a><span>Go where the good stuff happens.</span><a href="mailto:hello@gather.events">Say hello <span aria-hidden="true">↗</span></a><span class="footer-year">INDIA · 2026</span></footer>
 
     <dialog class="ticket-dialog" id="ticket-dialog" aria-labelledby="dialog-title">
       <button class="dialog-close" type="button" aria-label="Close reservation dialog">×</button>
@@ -114,6 +121,36 @@
       </div>
       <div class="confirmation" id="confirmation" hidden><span class="confirmation-mark" aria-hidden="true">✓</span><p class="eyebrow section-eyebrow">IT'S A PLAN</p><h2>You're on the list.</h2><p id="confirmation-copy" role="status"></p><div class="ticket-qr-list" id="ticket-qr-list"></div><button class="reserve-button done-button" type="button">Back to the good stuff</button></div>
     </dialog>
+    <dialog class="catalog-dialog" id="movie-dialog" aria-labelledby="movie-dialog-title">
+      <button class="dialog-close" type="button" data-close-dialog="movie-dialog" aria-label="Close movie booking">×</button>
+      <div class="catalog-dialog-content">
+        <p class="eyebrow section-eyebrow">MOVIE NIGHT</p><h2 id="movie-dialog-title"></h2><p id="movie-dialog-meta" class="host-form-note"></p>
+        <label class="host-field" for="movie-showtime">Choose a showtime<select id="movie-showtime" required></select></label>
+        <p id="movie-showtime-details" class="host-form-note"></p>
+        <div id="movie-seats" class="movie-seat-grid" aria-label="Choose seats"></div>
+        <label class="host-field" for="movie-booking-email">Email for your booking<input id="movie-booking-email" type="email" required autocomplete="email"></label>
+        <p id="movie-booking-note" class="host-form-note" role="status"></p>
+        <button class="reserve-button" id="movie-book-button" type="button">Continue to secure checkout</button>
+      </div>
+      <div id="movie-confirmation" class="catalog-dialog-content" hidden><p class="eyebrow section-eyebrow">YOU'RE ALL SET</p><h2>Movie night is booked.</h2><p id="movie-confirmation-copy" role="status"></p><button class="reserve-button" type="button" data-close-dialog="movie-dialog">Done</button></div>
+    </dialog>
+    <dialog class="catalog-dialog" id="dining-dialog" aria-labelledby="dining-dialog-title">
+      <button class="dialog-close" type="button" data-close-dialog="dining-dialog" aria-label="Close reservation form">×</button>
+      <div class="catalog-dialog-content">
+        <p class="eyebrow section-eyebrow">A TABLE FOR YOU</p><h2 id="dining-dialog-title"></h2><p id="dining-dialog-meta" class="host-form-note"></p>
+        <form id="dining-reservation-form" class="host-form">
+          <label class="host-field">Your name<input name="name" required minlength="2" maxlength="100"></label>
+          <label class="host-field">Email<input name="email" type="email" required maxlength="254"></label>
+          <label class="host-field">Phone<input name="phone" type="tel" required minlength="7" maxlength="30"></label>
+          <div class="host-form-row"><label class="host-field">Party size<input name="partySize" type="number" min="1" max="20" value="2" required></label><label class="host-field">Date and time<input name="requestedFor" type="datetime-local" required></label></div>
+          <label class="host-field">Note (optional)<textarea name="note" maxlength="500" rows="3"></textarea></label>
+          <p id="dining-reservation-note" class="host-form-note" role="status">This sends a request to the restaurant. No advance payment is collected.</p>
+          <button class="reserve-button" type="submit">Request a table</button>
+        </form>
+      </div>
+      <div id="dining-confirmation" class="catalog-dialog-content" hidden><p class="eyebrow section-eyebrow">REQUEST SENT</p><h2>We’ve passed it along.</h2><p id="dining-confirmation-copy" role="status"></p><button class="reserve-button" type="button" data-close-dialog="dining-dialog">Done</button></div>
+    </dialog>
+    <script src="catalog.js" defer></script>
 
     <dialog class="host-dialog" id="host-dialog" aria-labelledby="host-dialog-title">
       <button class="dialog-close" type="button" aria-label="Close host workspace">×</button>
@@ -152,6 +189,45 @@
           <h3>All orders</h3>
           <div class="dashboard-list" id="admin-orders"></div>
           <button type="button" class="text-button dashboard-more" id="admin-orders-more" hidden>Load older orders</button>
+          <h3>Movie bookings</h3>
+          <div class="dashboard-list" id="admin-movie-bookings"></div>
+          <h3>Movies and showtimes</h3>
+          <div class="dashboard-list" id="admin-movies"></div>
+          <div class="dashboard-list" id="admin-showtimes"></div>
+          <form id="admin-movie-form" class="host-form catalog-admin-form">
+            <h4>Add a movie</h4><input name="movieId" type="hidden">
+            <label class="host-field">Title<input name="title" required maxlength="140"></label>
+            <label class="host-field">Description<textarea name="description" required maxlength="3000" rows="3"></textarea></label>
+            <div class="host-form-row"><label class="host-field">Genres (comma separated)<input name="genres" required placeholder="Drama, Romance"></label><label class="host-field">Languages<input name="languages" required placeholder="Hindi, Punjabi"></label></div>
+            <div class="host-form-row"><label class="host-field">Duration (minutes)<input name="durationMinutes" type="number" min="1" max="600" required></label><label class="host-field">Certificate<input name="certificate" required maxlength="10" placeholder="UA 13+"></label></div>
+            <label class="host-field">Poster image URL<input name="posterUrl" type="url" required placeholder="https://images.unsplash.com/..."></label>
+            <label class="host-field">Visibility<select name="status"><option value="draft">Draft</option><option value="live">Publish</option><option value="archived">Archive</option></select></label>
+            <p class="host-form-note" id="admin-movie-note" role="status"></p><button class="reserve-button" type="submit">Save movie</button><button class="text-button" type="button" data-cancel-catalog-edit="movie">Cancel edit</button>
+          </form>
+          <form id="admin-showtime-form" class="host-form catalog-admin-form">
+            <h4>Add a showtime</h4><input name="showtimeId" type="hidden">
+            <label class="host-field">Movie<select name="movieId" required></select></label>
+            <div class="host-form-row"><label class="host-field">Cinema<input name="cinema" required maxlength="160"></label><label class="host-field">Screen<input name="screen" required maxlength="80" placeholder="Screen 1"></label></div>
+            <label class="host-field">Address<input name="address" required maxlength="240"></label>
+            <div class="host-form-row"><label class="host-field">City<input name="city" value="Chandigarh" required maxlength="80"></label><label class="host-field">State/UT<input name="state" value="Chandigarh" required maxlength="80"></label></div>
+            <div class="host-form-row"><label class="host-field">Starts at<input name="startsAt" type="datetime-local" required></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0.01" step="0.01" required></label></div>
+            <label class="host-field">Seat labels (comma separated)<input name="seatLabels" required placeholder="A1, A2, A3, B1, B2"><small>Use unique labels such as A1 through A10. Up to 300 seats.</small></label>
+            <p class="host-form-note" id="admin-showtime-note" role="status"></p><button class="reserve-button" type="submit">Save showtime</button><button class="text-button" type="button" data-cancel-catalog-edit="showtime">Cancel edit</button>
+          </form>
+          <h3>Restaurants and reservations</h3>
+          <div class="dashboard-list" id="admin-restaurants"></div>
+          <div class="dashboard-list" id="admin-dining-reservations"></div>
+          <form id="admin-restaurant-form" class="host-form catalog-admin-form">
+            <h4>Add a restaurant</h4><input name="restaurantId" type="hidden">
+            <label class="host-field">Name<input name="name" required maxlength="140"></label>
+            <label class="host-field">Description<textarea name="description" required maxlength="3000" rows="3"></textarea></label>
+            <div class="host-form-row"><label class="host-field">Cuisine<input name="cuisine" required maxlength="100"></label><label class="host-field">Price level (1-4)<input name="priceLevel" type="number" min="1" max="4" required></label></div>
+            <label class="host-field">Address<input name="address" required maxlength="240"></label>
+            <div class="host-form-row"><label class="host-field">City<input name="city" value="Chandigarh" required maxlength="80"></label><label class="host-field">State/UT<input name="state" value="Chandigarh" required maxlength="80"></label></div>
+            <div class="host-form-row"><label class="host-field">Phone<input name="phone" type="tel" maxlength="30"></label><label class="host-field">Image URL<input name="imageUrl" type="url" required placeholder="https://images.unsplash.com/..."></label></div>
+            <label class="host-field">Visibility<select name="status"><option value="draft">Draft</option><option value="live">Publish</option><option value="archived">Archive</option></select></label>
+            <p class="host-form-note" id="admin-restaurant-note" role="status"></p><button class="reserve-button" type="submit">Save restaurant</button><button class="text-button" type="button" data-cancel-catalog-edit="restaurant">Cancel edit</button>
+          </form>
         </section>
         <form id="host-event-form" class="host-form event-host-form">
           <h3 id="event-form-heading">Create an event</h3>
@@ -165,8 +241,8 @@
           <iframe id="host-event-address-map" class="location-map-preview" title="Event address map preview" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>
           <button class="reserve-button" id="host-event-address-use" type="button" hidden>Use this address <span aria-hidden="true">↗</span></button>
           <small class="location-attribution">Address search by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
-          <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" value="Portland" required maxlength="80"></label></div>
-          <div class="host-form-row"><label class="host-field">State<input name="state" value="OR" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" value="0" required></label></div>
+          <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" value="Chandigarh" required maxlength="80"></label></div>
+          <div class="host-form-row"><label class="host-field">State/UT<input name="state" value="Chandigarh" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" value="0" required></label></div>
           <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" value="50" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Save as draft</option><option value="live">Publish now</option></select></label></div>
           <label class="host-field">Event image URL<input name="image" type="url" placeholder="https://images.unsplash.com/photo-..."><small>Use a direct images.unsplash.com image URL. If omitted or invalid, your event is saved with a placeholder image.</small></label>
           <label class="host-field">Image description<input name="alt" required minlength="5" maxlength="240"></label>

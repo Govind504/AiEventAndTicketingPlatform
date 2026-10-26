@@ -3,6 +3,7 @@ const { z } = require("zod");
 const Event = require("../models/Event");
 const Order = require("../models/Order");
 const User = require("../models/User");
+const MovieBooking = require("../models/MovieBooking");
 const { requireAdmin, requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -28,10 +29,18 @@ const eventUpdate = z.object({
 router.use(requireAuth, requireAdmin);
 
 router.get("/dashboard", async (request, response) => {
-  const [events, userCount, orderSummary] = await Promise.all([
+  const [events, userCount, orderSummary, movieBookingSummary] = await Promise.all([
     Event.find().populate("organizer", "name email").sort({ startsAt: 1 }).lean(),
     User.countDocuments(),
     Order.aggregate([
+      { $group: {
+        _id: null,
+        orderCount: { $sum: 1 },
+        paidCount: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, 1, 0] } },
+        revenueCents: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$totalCents", 0] } }
+      } }
+    ]),
+    MovieBooking.aggregate([
       { $group: {
         _id: null,
         orderCount: { $sum: 1 },
@@ -44,9 +53,9 @@ router.get("/dashboard", async (request, response) => {
     summary: {
       userCount,
       eventCount: events.length,
-      orderCount: orderSummary[0]?.orderCount || 0,
-      paidCount: orderSummary[0]?.paidCount || 0,
-      revenueCents: orderSummary[0]?.revenueCents || 0
+      orderCount: (orderSummary[0]?.orderCount || 0) + (movieBookingSummary[0]?.orderCount || 0),
+      paidCount: (orderSummary[0]?.paidCount || 0) + (movieBookingSummary[0]?.paidCount || 0),
+      revenueCents: (orderSummary[0]?.revenueCents || 0) + (movieBookingSummary[0]?.revenueCents || 0)
     },
     events: events.map((event) => ({
       id: event._id.toString(),

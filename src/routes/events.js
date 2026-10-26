@@ -2,12 +2,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const Event = require("../models/Event");
 const { serializeEvent } = require("../lib/events");
+const retiredSampleSlugs = require("../lib/retired-sample-events");
 
 const router = express.Router();
 const categories = new Set(["music", "food", "art", "outdoors"]);
 
 router.get("/", async (request, response) => {
-  const query = { status: "live", startsAt: { $gte: new Date() } };
+  const query = { status: "live", startsAt: { $gte: new Date() }, slug: { $nin: retiredSampleSlugs } };
   const category = typeof request.query.category === "string" ? request.query.category : "";
   const search = typeof request.query.search === "string" ? request.query.search.trim().slice(0, 80) : "";
   const city = typeof request.query.city === "string" ? request.query.city.trim().slice(0, 80) : "";
@@ -37,7 +38,7 @@ router.get("/", async (request, response) => {
 
 router.get("/:id", async (request, response) => {
   if (!mongoose.isValidObjectId(request.params.id)) return response.status(404).json({ error: "Event not found" });
-  const event = await Event.findOne({ _id: request.params.id, status: "live" }).lean();
+  const event = await Event.findOne({ _id: request.params.id, status: "live", slug: { $nin: retiredSampleSlugs } }).lean();
   if (!event) return response.status(404).json({ error: "Event not found" });
   response.json({ event: serializeEvent(event) });
 });
