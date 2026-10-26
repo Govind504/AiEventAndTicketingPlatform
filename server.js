@@ -26,7 +26,7 @@ const app = express();
 const rootDir = __dirname;
 const appUrl = process.env.APP_URL || "http://localhost:3000";
 
-app.set("trust proxy", process.env.TRUST_PROXY === "true");
+app.set("trust proxy", process.env.VERCEL === "1" ? 1 : process.env.TRUST_PROXY === "true");
 app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   contentSecurityPolicy: {

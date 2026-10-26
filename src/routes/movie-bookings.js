@@ -5,6 +5,7 @@ const MovieShowtime = require("../models/MovieShowtime");
 const MovieBooking = require("../models/MovieBooking");
 const { releaseExpiredMovieBookings, releaseMovieBooking, settleMovieBooking } = require("../lib/movie-bookings");
 const { getCapturedPayment, getRazorpay, verifyPaymentSignature } = require("../lib/razorpay");
+const { getRazorpayOrderAmountError } = require("../lib/payment-limits");
 const { optionalAuth } = require("../middleware/auth");
 
 const router = express.Router();
@@ -29,6 +30,8 @@ router.post("/session", optionalAuth, async (request, response) => {
   }
   const showtime = await MovieShowtime.findOne({ _id: input.showtimeId, status: "live", startsAt: { $gt: new Date() } }).populate("movie", "title status");
   if (!showtime || !showtime.movie || showtime.movie.status !== "live") return response.status(404).json({ error: "This showtime is no longer available" });
+  const amountError = getRazorpayOrderAmountError(showtime.priceCents * seats.length);
+  if (amountError) return response.status(400).json({ error: amountError });
   await releaseExpiredMovieBookings([showtime._id]);
   if (seats.some((seat) => !showtime.seatLabels.includes(seat))) return response.status(400).json({ error: "One or more selected seats are invalid" });
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);

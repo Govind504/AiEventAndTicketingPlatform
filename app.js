@@ -36,7 +36,6 @@ try {
 }
 sessionStorage.removeItem("gather-host-token");
 let activeCategory = "all";
-let savedOnly = false;
 let selectedEvent = null;
 let quantity = 1;
 let toastTimer;
@@ -387,6 +386,20 @@ async function requestJson(url, options = {}) {
 
 window.gatherSetCurrentUser = async (user) => {
   currentUser = user;
+  const profileButton = document.querySelector(".profile-button");
+  const profileIcon = profileButton.querySelector(".profile-icon");
+  const profileInitial = profileButton.querySelector(".profile-initial");
+  if (user) {
+    profileIcon.hidden = true;
+    profileInitial.hidden = false;
+    profileInitial.textContent = user.name.trim().charAt(0).toLocaleUpperCase();
+    profileButton.setAttribute("aria-label", `Open ${user.name}'s Gather account`);
+  } else {
+    profileIcon.hidden = false;
+    profileInitial.hidden = true;
+    profileInitial.textContent = "";
+    profileButton.setAttribute("aria-label", "Sign in to your Gather account");
+  }
   savedEvents.clear();
   if (user) {
     try {
@@ -419,7 +432,7 @@ function filteredEvents() {
   const results = events.filter((event) => {
     const matchesCategory = activeCategory === "all" || event.category === activeCategory;
     const searchable = `${event.title} ${event.categoryLabel} ${event.venue}`.toLowerCase();
-    return matchesCategory && searchable.includes(query) && (!savedOnly || savedEvents.has(event.id));
+    return matchesCategory && searchable.includes(query);
   });
 
   if (sortSelect.value === "price-low") results.sort((first, second) => first.priceCents - second.priceCents);
@@ -431,9 +444,7 @@ function renderEvents() {
   document.querySelector('.category-chip[data-category="all"] span').textContent = String(events.length).padStart(2, "0");
   resultsCount.textContent = `Showing ${results.length} ${results.length === 1 ? "plan" : "plans"}`;
   emptyState.hidden = results.length > 0;
-  emptyState.textContent = savedOnly
-    ? "No saved plans yet. Save an event to keep it here."
-    : `No events found in ${currentLocation.city}. Try changing your location or search.`;
+  emptyState.textContent = `No events found in ${currentLocation.city}. Try changing your location or search.`;
   eventGrid.innerHTML = results.map((event, index) => {
     const mapUrl = new URL("https://www.google.com/maps/search/");
     mapUrl.searchParams.set("api", "1");
@@ -658,13 +669,6 @@ useLocationButton.addEventListener("click", () => {
 
 searchInput.addEventListener("input", renderEvents);
 sortSelect.addEventListener("change", renderEvents);
-
-document.querySelector(".saved-link").addEventListener("click", (event) => {
-  savedOnly = !savedOnly;
-  event.currentTarget.setAttribute("aria-pressed", String(savedOnly));
-  event.currentTarget.querySelector("span").textContent = savedOnly ? "All events" : "Saved";
-  renderEvents();
-});
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {

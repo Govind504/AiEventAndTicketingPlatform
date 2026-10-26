@@ -349,6 +349,9 @@ document.querySelectorAll("[data-close-dialog]").forEach((button) => {
 });
 
 catalogModeButtons.forEach((button) => button.addEventListener("click", () => setCatalogMode(button.dataset.catalogType)));
+document.querySelectorAll("[data-footer-catalog]").forEach((link) => {
+  link.addEventListener("click", () => setCatalogMode(link.dataset.footerCatalog));
+});
 catalogSearch.addEventListener("input", () => {
   if (catalogMode === "movies") renderCatalogMovies();
   if (catalogMode === "dining") renderCatalogRestaurants();

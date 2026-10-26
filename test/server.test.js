@@ -75,6 +75,12 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(pageHtml, /host-event-address-search/);
   assert.match(pageHtml, /host-event-address-map/);
   assert.match(pageHtml, /name="address"/);
+  assert.match(pageHtml, /aria-label="Explore Gather"/);
+  assert.match(pageHtml, /class="header-search-link"/);
+  assert.match(pageHtml, /data-footer-catalog="movies"/);
+  assert.match(pageHtml, /footer-bottom/);
+  assert.match(pageHtml, /class="profile-button"[^>]+data-open-account/);
+  assert.doesNotMatch(pageHtml.match(/<header class="site-header">([\s\S]*?)<\/header>/)[1], />Dining</);
 
   const script = await fetch(`${baseUrl}/app.js`);
   const scriptText = await script.text();

@@ -19,7 +19,7 @@ const eventUpdate = z.object({
   address: z.string().trim().max(240),
   city: z.string().trim().min(2).max(80),
   state: z.string().trim().min(2).max(40),
-  priceCents: z.number().int().min(0).max(100000000),
+  priceCents: z.number().int().min(0).max(50000000),
   image: z.string().url().refine((value) => value.startsWith("https://"), "Image URL must use HTTPS"),
   alt: z.string().trim().min(5).max(240),
   capacity: z.number().int().min(1).max(100000),

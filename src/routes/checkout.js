@@ -6,6 +6,7 @@ const Event = require("../models/Event");
 const Order = require("../models/Order");
 const { getCapturedPayment, getRazorpay, verifyPaymentSignature } = require("../lib/razorpay");
 const { releasePendingOrder, settlePaidOrder } = require("../lib/orders");
+const { getRazorpayOrderAmountError } = require("../lib/payment-limits");
 const { isTicketSigningConfigured, ticketPresentations } = require("../lib/tickets");
 const retiredSampleSlugs = require("../lib/retired-sample-events");
 const { optionalAuth } = require("../middleware/auth");
@@ -33,6 +34,10 @@ router.post("/session", optionalAuth, async (request, response) => {
   }
   const event = await Event.findOne({ _id: input.eventId, status: "live", startsAt: { $gt: new Date() }, slug: { $nin: retiredSampleSlugs } });
   if (!event) return response.status(404).json({ error: "This event is no longer available" });
+  const amountError = event.priceCents > 0
+    ? getRazorpayOrderAmountError(event.priceCents * input.quantity)
+    : null;
+  if (amountError) return response.status(400).json({ error: amountError });
 
   const razorpay = event.priceCents > 0 ? getRazorpay() : null;
   const expiresAt = new Date(Date.now() + 40 * 60 * 1000);

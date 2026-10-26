@@ -17,16 +17,17 @@
   <body>
     <header class="site-header">
       <a class="wordmark" href="#top" aria-label="Gather home"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <a class="nav-link active" href="#events">Discover</a>
-        <a class="nav-link" href="#how-it-works">How it works</a>
-        <a class="nav-link" href="#host">For hosts</a>
+      <nav class="main-nav" aria-label="Explore Gather">
+        <button class="nav-link catalog-nav-link active" type="button" data-catalog-type="events" aria-pressed="true">Events</button>
+        <button class="nav-link catalog-nav-link" type="button" data-catalog-type="movies" aria-pressed="false">Movies</button>
       </nav>
       <div class="header-actions">
         <button class="location-button" id="location-picker-button" type="button" aria-label="Change event location"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.2"/></svg><span id="current-location-label">Chandigarh, India</span><svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
-        <a class="saved-link" href="#events" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8a4.5 4.5 0 0 1 8-2.8 4.5 4.5 0 0 1 8 2.8Z"/></svg><span>Saved</span></a>
-        <a class="text-button account-button" href="/dashboard">My dashboard</a>
-        <a class="host-button" href="#host" data-open-host>List an event <span aria-hidden="true">↗</span></a>
+        <a class="header-search-link" href="#event-search" aria-label="Search Gather"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg></a>
+        <button class="profile-button" type="button" data-open-account aria-label="Open your Gather account">
+          <svg class="profile-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.7 3-5.5 7-5.5s6.4 1.8 7 5.5"/></svg>
+          <span class="profile-initial" hidden aria-hidden="true"></span>
+        </button>
       </div>
     </header>
 
@@ -102,7 +103,16 @@
       </section>
     </main>
 
-    <footer class="site-footer"><a class="wordmark footer-wordmark" href="#top"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a><span>Go where the good stuff happens.</span><a href="mailto:hello@gather.events">Say hello <span aria-hidden="true">↗</span></a><span class="footer-year">INDIA · 2026</span></footer>
+    <footer class="site-footer">
+      <div class="footer-brand">
+        <a class="wordmark footer-wordmark" href="#top" aria-label="Gather home"><span class="brand-mark" aria-hidden="true">g</span>gather<span class="wordmark-dot">.</span></a>
+        <p>Find your next good plan, close to home.</p>
+        <span class="footer-year">MADE FOR GOOD DAYS OUT · INDIA</span>
+      </div>
+      <div class="footer-column"><h2>Explore</h2><a href="#events" data-footer-catalog="events">Events</a><a href="#events" data-footer-catalog="movies">Movies</a><a href="#events" data-footer-catalog="dining">Dining</a></div>
+      <div class="footer-column"><h2>For the community</h2><a href="#host" data-open-host>Host with Gather ↗</a><a href="#how-it-works">How it works</a><a href="mailto:hello@gather.events">Contact us</a></div>
+      <div class="footer-bottom"><span>© 2026 Gather. Made for getting out there.</span><a href="#top">Back to top ↑</a></div>
+    </footer>
 
     <dialog class="ticket-dialog" id="ticket-dialog" aria-labelledby="dialog-title">
       <button class="dialog-close" type="button" aria-label="Close reservation dialog">×</button>
@@ -242,7 +252,7 @@
           <button class="reserve-button" id="host-event-address-use" type="button" hidden>Use this address <span aria-hidden="true">↗</span></button>
           <small class="location-attribution">Address search by <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>.</small>
           <div class="host-form-row"><label class="host-field">Venue<input name="venue" required maxlength="160"></label><label class="host-field">City<input name="city" value="Chandigarh" required maxlength="80"></label></div>
-          <div class="host-form-row"><label class="host-field">State/UT<input name="state" value="Chandigarh" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="1000000" step="0.01" value="0" required></label></div>
+          <div class="host-form-row"><label class="host-field">State/UT<input name="state" value="Chandigarh" required maxlength="40"></label><label class="host-field">Ticket price (INR)<input name="price" type="number" min="0" max="500000" step="0.01" value="0" required></label></div>
           <div class="host-form-row"><label class="host-field">Capacity<input name="capacity" type="number" min="1" max="100000" value="50" required></label><label class="host-field">Visibility<select name="status"><option value="draft">Save as draft</option><option value="live">Publish now</option></select></label></div>
           <label class="host-field">Event image URL<input name="image" type="url" placeholder="https://images.unsplash.com/photo-..."><small>Use a direct images.unsplash.com image URL. If omitted or invalid, your event is saved with a placeholder image.</small></label>
           <label class="host-field">Image description<input name="alt" required minlength="5" maxlength="240"></label>
