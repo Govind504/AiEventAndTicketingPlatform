@@ -10,10 +10,21 @@ const locationDialog = document.querySelector("#location-dialog");
 const locationForm = document.querySelector("#location-form");
 const locationSearch = document.querySelector("#location-search");
 const currentLocationButton = document.querySelector("#current-location-button");
+const currentLocationButtonLabel = currentLocationButton.querySelector("span:not(.location-action-arrow)");
 const locationSuggestions = document.querySelector("#location-suggestions");
 const locationSearchStatus = document.querySelector("#location-search-status");
 const locationMapPreview = document.querySelector("#location-map-preview");
 const useLocationButton = document.querySelector("#use-location-button");
+const hero = document.querySelector(".hero");
+const heroImage = document.querySelector(".hero-image");
+const heroFeatureTitle = document.querySelector("#hero-feature-title");
+const heroFeatureCopy = document.querySelector("#hero-feature-copy");
+const heroFeatureAction = document.querySelector("#hero-feature-action");
+const heroIndex = document.querySelector("#hero-index");
+const heroDots = document.querySelector("#hero-carousel-dots");
+const heroPrevious = document.querySelector("#hero-previous");
+const heroNext = document.querySelector("#hero-next");
+const heroToggle = document.querySelector("#hero-carousel-toggle");
 const toast = document.querySelector("#toast");
 const savedEvents = new Set();
 let legacySavedEventIds = [];
@@ -30,6 +41,12 @@ let selectedEvent = null;
 let quantity = 1;
 let toastTimer;
 let currentUser = null;
+let heroSlides = [];
+let activeHeroSlide = 0;
+let heroTimer;
+let heroPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let heroHoverPaused = false;
+let heroFocusPaused = false;
 let currentLocation = { city: "Portland", state: "OR" };
 let locationSearchTimer;
 let locationSearchController;
@@ -68,6 +85,12 @@ function renderCurrentLocation() {
     : currentLocation.city;
   document.querySelector("#current-location-label").textContent = label;
   document.querySelector("#location-picker-button").setAttribute("aria-label", `Change event location. Current location: ${label}`);
+}
+
+function updateHeroToggle() {
+  heroToggle.setAttribute("aria-pressed", String(heroPaused));
+  heroToggle.setAttribute("aria-label", heroPaused ? "Resume automatic featured events" : "Pause automatic featured events");
+  heroToggle.textContent = heroPaused ? "▶" : "Ⅱ";
 }
 
 function placeCity(address) {
@@ -222,7 +245,8 @@ function cancelCurrentLocationRequest() {
   reverseGeocodeController?.abort();
   reverseGeocodeController = null;
   currentLocationButton.disabled = false;
-  currentLocationButton.textContent = "Use my current location";
+  currentLocationButtonLabel.textContent = "Use my current location";
+  currentLocationButton.setAttribute("aria-busy", "false");
 }
 
 function geolocationErrorMessage(error) {
@@ -248,7 +272,8 @@ async function useCurrentLocation() {
 
   const requestId = ++currentLocationRequestId;
   currentLocationButton.disabled = true;
-  currentLocationButton.textContent = "Finding your location…";
+  currentLocationButtonLabel.textContent = "Finding your location…";
+  currentLocationButton.setAttribute("aria-busy", "true");
   locationSearchStatus.textContent = "Allow location access when your browser asks.";
 
   try {
@@ -293,7 +318,8 @@ async function useCurrentLocation() {
   } finally {
     if (requestId === currentLocationRequestId) {
       currentLocationButton.disabled = false;
-      currentLocationButton.textContent = "Use my current location";
+      currentLocationButtonLabel.textContent = "Use my current location";
+      currentLocationButton.setAttribute("aria-busy", "false");
       reverseGeocodeController = null;
     }
   }
@@ -421,6 +447,71 @@ function renderEvents() {
   }).join("");
 }
 
+function renderHeroSlide(index) {
+  if (!heroSlides.length) return;
+  activeHeroSlide = (index + heroSlides.length) % heroSlides.length;
+  const slide = heroSlides[activeHeroSlide];
+  hero.classList.add("hero-changing");
+  window.setTimeout(() => {
+    heroImage.src = slide.image;
+    heroImage.alt = slide.alt || `Photo for ${slide.title}`;
+    heroFeatureTitle.textContent = slide.title;
+    heroFeatureCopy.textContent = slide.copy;
+    heroFeatureAction.setAttribute("aria-label", `Get tickets for ${slide.title}`);
+    heroFeatureAction.dataset.eventId = slide.id;
+    heroIndex.textContent = `${String(activeHeroSlide + 1).padStart(2, "0")} / ${String(heroSlides.length).padStart(2, "0")}`;
+    heroDots.querySelectorAll("button").forEach((dot, dotIndex) => {
+      const isActive = dotIndex === activeHeroSlide;
+      dot.classList.toggle("selected", isActive);
+      dot.setAttribute("aria-pressed", String(isActive));
+    });
+    hero.classList.remove("hero-changing");
+  }, 180);
+}
+
+function setHeroSlides(eventList) {
+  heroSlides = eventList.slice(0, 6).map((event) => ({
+    id: event.id,
+    image: event.image,
+    alt: event.alt,
+    title: event.title,
+    copy: `${event.categoryLabel} · ${event.venue}`
+  }));
+  heroDots.replaceChildren(...heroSlides.map((slide, index) => {
+    const dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "hero-carousel-dot";
+    dot.setAttribute("aria-label", `Show featured event ${index + 1}: ${slide.title}`);
+    dot.setAttribute("aria-pressed", "false");
+    dot.addEventListener("click", () => {
+      renderHeroSlide(index);
+      restartHeroTimer();
+    });
+    return dot;
+  }));
+
+  const hasMultipleSlides = heroSlides.length > 1;
+  heroPrevious.hidden = !hasMultipleSlides;
+  heroNext.hidden = !hasMultipleSlides;
+  heroToggle.hidden = !hasMultipleSlides;
+  document.querySelector("#hero-feature").hidden = heroSlides.length === 0;
+  if (!heroSlides.length) {
+    heroDots.replaceChildren();
+    heroIndex.hidden = true;
+    clearInterval(heroTimer);
+    return;
+  }
+  heroIndex.hidden = false;
+  renderHeroSlide(0);
+  restartHeroTimer();
+}
+
+function restartHeroTimer() {
+  clearInterval(heroTimer);
+  if (heroPaused || heroHoverPaused || heroFocusPaused || document.hidden || heroSlides.length < 2) return;
+  heroTimer = window.setInterval(() => renderHeroSlide(activeHeroSlide + 1), 6500);
+}
+
 async function loadEvents() {
   try {
     const query = new URLSearchParams({ city: currentLocation.city });
@@ -428,9 +519,11 @@ async function loadEvents() {
     const data = await requestJson(`/api/events?${query}`);
     events = data.events;
     renderEvents();
+    setHeroSlides(events);
   } catch {
     events = [];
     renderEvents();
+    setHeroSlides(events);
     emptyState.textContent = "Events could not be loaded. Check the backend connection and refresh.";
   }
 }
@@ -483,6 +576,47 @@ document.querySelectorAll(".category-chip").forEach((button) => {
     });
     renderEvents();
   });
+});
+
+heroPrevious.addEventListener("click", () => {
+  renderHeroSlide(activeHeroSlide - 1);
+  restartHeroTimer();
+});
+heroNext.addEventListener("click", () => {
+  renderHeroSlide(activeHeroSlide + 1);
+  restartHeroTimer();
+});
+heroToggle.addEventListener("click", () => {
+  heroPaused = !heroPaused;
+  updateHeroToggle();
+  restartHeroTimer();
+});
+hero.addEventListener("mouseenter", () => {
+  heroHoverPaused = true;
+  clearInterval(heroTimer);
+});
+hero.addEventListener("mouseleave", () => {
+  heroHoverPaused = false;
+  restartHeroTimer();
+});
+hero.addEventListener("focusin", () => {
+  heroFocusPaused = true;
+  clearInterval(heroTimer);
+});
+hero.addEventListener("focusout", (event) => {
+  if (!hero.contains(event.relatedTarget)) {
+    heroFocusPaused = false;
+    restartHeroTimer();
+  }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clearInterval(heroTimer);
+  else restartHeroTimer();
+});
+updateHeroToggle();
+document.querySelector("#hero-feature-action").addEventListener("click", (event) => {
+  const selected = events.find((item) => item.id === event.currentTarget.dataset.eventId);
+  if (selected) openReservation(selected);
 });
 
 document.querySelector("#location-picker-button").addEventListener("click", () => {
@@ -560,13 +694,6 @@ eventGrid.addEventListener("click", async (event) => {
   } catch (error) {
     showToast(error.message);
   }
-});
-
-document.querySelectorAll("[data-event-id]").forEach((button) => {
-  button.addEventListener("click", () => {
-    const event = events.find((item) => item.id === button.dataset.eventId);
-    if (event) openReservation(event);
-  });
 });
 
 document.querySelector(".dialog-close").addEventListener("click", () => dialog.close());

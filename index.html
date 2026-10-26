@@ -31,7 +31,7 @@
     </header>
 
     <main id="top">
-      <section class="hero" aria-labelledby="hero-title">
+      <section class="hero" aria-labelledby="hero-title" aria-roledescription="carousel">
         <img class="hero-image" src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=2200&q=85" alt="A crowd gathered beneath the lights at a live music show">
         <div class="hero-shade"></div>
         <div class="hero-content">
@@ -41,11 +41,17 @@
           <a class="hero-cta" href="#events">Find your next thing <span aria-hidden="true">↓</span></a>
         </div>
         <div class="hero-caption"><span class="caption-line"></span><span>NOT JUST ANOTHER NIGHT IN</span></div>
-        <div class="hero-feature">
-          <div><span class="feature-label">TONIGHT'S PICK</span><h2>Sundown Sessions</h2><p>Live music, open air, no bad seats.</p></div>
-          <button class="feature-arrow" type="button" data-event-id="sundown" aria-label="Get tickets for Sundown Sessions">↗</button>
+        <div class="hero-feature" id="hero-feature">
+          <div><span class="feature-label">FEATURED IN YOUR CITY</span><h2 id="hero-feature-title">Sundown Sessions</h2><p id="hero-feature-copy">Live music, open air, no bad seats.</p></div>
+          <button class="feature-arrow" id="hero-feature-action" type="button" aria-label="Get tickets for Sundown Sessions">↗</button>
         </div>
-        <span class="hero-index" aria-hidden="true">01 / 04</span>
+        <div class="hero-carousel-controls" aria-label="Featured event controls">
+          <button class="hero-carousel-arrow" id="hero-previous" type="button" aria-label="Previous featured event">←</button>
+          <div class="hero-carousel-dots" id="hero-carousel-dots" role="group" aria-label="Choose featured event"></div>
+          <button class="hero-carousel-arrow" id="hero-next" type="button" aria-label="Next featured event">→</button>
+          <button class="hero-carousel-toggle" id="hero-carousel-toggle" type="button" aria-label="Pause automatic featured events" aria-pressed="false">Ⅱ</button>
+        </div>
+        <span class="hero-index" id="hero-index" aria-hidden="true">01 / 01</span>
       </section>
 
       <section class="discovery section-wrap" id="events" aria-labelledby="events-title">
@@ -177,7 +183,7 @@
         <h2 id="location-dialog-title">Search an address</h2>
         <form id="location-form" class="host-form">
           <label class="host-field">Address, city, or ZIP code<input id="location-search" name="address" type="search" required minlength="3" maxlength="120" placeholder="Try a street, neighborhood, or city" autocomplete="off" aria-controls="location-suggestions" aria-autocomplete="list"></label>
-          <button class="text-button" id="current-location-button" type="button">Use my current location</button>
+          <button class="current-location-action" id="current-location-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3m9-9h-3M6 12H3"/><circle cx="12" cy="12" r="6"/></svg><span>Use my current location</span><span class="location-action-arrow" aria-hidden="true">↗</span></button>
           <p id="location-search-status" class="host-form-note" role="status" aria-live="polite">Search for a place, then choose a suggestion.</p>
           <ul id="location-suggestions" class="location-suggestions" role="listbox" aria-label="Address suggestions"></ul>
           <iframe id="location-map-preview" class="location-map-preview" title="Map preview for selected address" loading="lazy" referrerpolicy="no-referrer" hidden></iframe>

@@ -30,6 +30,8 @@ The sample event dates are seeded once. The seed script includes three events in
 ## Included flows
 
 - Public event listing, search, category filtering, and price sorting from MongoDB.
+- The landing-page hero automatically rotates through event photos, with previous/next, direct-slide, and pause controls; it pauses on hover/focus and respects reduced-motion preferences.
+- Primary actions and account/location controls use consistent, high-contrast button styling with visible keyboard focus states.
 - Registration data, bcrypt password hashes, and server-managed authentication sessions stored in MongoDB. The browser receives only an HttpOnly session cookie; each request is authenticated against the MongoDB session and user records.
 - Role-based dashboards for clients, event organizers, and administrators.
 - A dedicated organizer dashboard with the organizer's event list, event editing, ticket sales, and paid revenue.
