@@ -9,6 +9,7 @@ const dialog = document.querySelector("#ticket-dialog");
 const locationDialog = document.querySelector("#location-dialog");
 const locationForm = document.querySelector("#location-form");
 const locationSearch = document.querySelector("#location-search");
+const currentLocationButton = document.querySelector("#current-location-button");
 const locationSuggestions = document.querySelector("#location-suggestions");
 const locationSearchStatus = document.querySelector("#location-search-status");
 const locationMapPreview = document.querySelector("#location-map-preview");
@@ -33,6 +34,8 @@ let currentLocation = { city: "Portland", state: "OR" };
 let locationSearchTimer;
 let locationSearchController;
 let locationSearchRequestId = 0;
+let currentLocationRequestId = 0;
+let reverseGeocodeController;
 const locationSearchCache = new Map();
 const usStateCodes = new Map([
   ["alabama", "AL"], ["alaska", "AK"], ["arizona", "AZ"], ["arkansas", "AR"], ["california", "CA"],
@@ -160,6 +163,7 @@ function previewLocation(place, selectedOption) {
 }
 
 function searchLocations(value) {
+  cancelCurrentLocationRequest();
   window.clearTimeout(locationSearchTimer);
   locationSearchController?.abort();
   locationSearchController = null;
@@ -211,6 +215,88 @@ function searchLocations(value) {
       locationSearchStatus.textContent = error.message || "Address search failed. Please try again.";
     }
   }, 1100);
+}
+
+function cancelCurrentLocationRequest() {
+  currentLocationRequestId += 1;
+  reverseGeocodeController?.abort();
+  reverseGeocodeController = null;
+  currentLocationButton.disabled = false;
+  currentLocationButton.textContent = "Use my current location";
+}
+
+function geolocationErrorMessage(error) {
+  if (error.code === 1) return "Location permission was denied. Allow location access in your browser or search for an address.";
+  if (error.code === 2) return "Your location is unavailable. Check your device settings or search for an address.";
+  if (error.code === 3) return "Finding your location timed out. Please try again or search for an address.";
+  return "Could not get your location. Please try again or search for an address.";
+}
+
+async function useCurrentLocation() {
+  cancelCurrentLocationRequest();
+  window.clearTimeout(locationSearchTimer);
+  locationSearchController?.abort();
+  locationSearchController = null;
+  locationSearchRequestId += 1;
+  locationSuggestions.replaceChildren();
+  clearLocationPreview();
+
+  if (!navigator.geolocation) {
+    locationSearchStatus.textContent = "Location is not supported by this browser. Search for an address instead.";
+    return;
+  }
+
+  const requestId = ++currentLocationRequestId;
+  currentLocationButton.disabled = true;
+  currentLocationButton.textContent = "Finding your location…";
+  locationSearchStatus.textContent = "Allow location access when your browser asks.";
+
+  try {
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: false,
+        maximumAge: 300000,
+        timeout: 10000
+      });
+    });
+    if (requestId !== currentLocationRequestId || !locationDialog.open) return;
+
+    const controller = new AbortController();
+    reverseGeocodeController = controller;
+    const url = new URL("https://nominatim.openstreetmap.org/reverse");
+    url.search = new URLSearchParams({
+      format: "jsonv2",
+      addressdetails: "1",
+      lat: String(position.coords.latitude),
+      lon: String(position.coords.longitude)
+    });
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) throw new Error("Location lookup is temporarily unavailable.");
+    const place = await response.json();
+    if (requestId !== currentLocationRequestId || !locationDialog.open) return;
+    if (!placeCity(place.address || {})) {
+      locationSearchStatus.textContent = "Could not identify a city near you. Search for an address instead.";
+      return;
+    }
+
+    locationSearch.value = place.display_name;
+    renderLocationSuggestions([place]);
+    locationSearchStatus.textContent = "Current location found. Choose Use this location to see events nearby.";
+  } catch (error) {
+    if (error.name === "AbortError" || requestId !== currentLocationRequestId) return;
+    locationSearchStatus.textContent = typeof error.code === "number"
+      ? geolocationErrorMessage(error)
+      : "Could not look up your location. Please try again or search for an address.";
+  } finally {
+    if (requestId === currentLocationRequestId) {
+      currentLocationButton.disabled = false;
+      currentLocationButton.textContent = "Use my current location";
+      reverseGeocodeController = null;
+    }
+  }
 }
 
 async function selectLocation(city, state) {
@@ -412,10 +498,12 @@ locationDialog.addEventListener("click", (event) => {
   if (event.target === locationDialog) locationDialog.close();
 });
 locationDialog.addEventListener("close", () => {
+  cancelCurrentLocationRequest();
   window.clearTimeout(locationSearchTimer);
   locationSearchController?.abort();
 });
 locationSearch.addEventListener("input", () => searchLocations(locationSearch.value));
+currentLocationButton.addEventListener("click", useCurrentLocation);
 locationForm.addEventListener("submit", (event) => event.preventDefault());
 useLocationButton.addEventListener("click", () => {
   if (!selectedLocationPlace) return;

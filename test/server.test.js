@@ -52,6 +52,7 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(pageHtml, /location-picker-button/);
   assert.match(pageHtml, /location-dialog-title/);
   assert.match(pageHtml, /location-search/);
+  assert.match(pageHtml, /current-location-button/);
   assert.match(pageHtml, /location-suggestions/);
   assert.match(pageHtml, /location-map-preview/);
   assert.match(pageHtml, /use-location-button/);
@@ -65,6 +66,7 @@ test("home page has a location picker and free Google Maps venue links", async (
   assert.match(scriptText, /gather-location/);
   assert.match(scriptText, /www\.google\.com\/maps\/search/);
   assert.match(scriptText, /nominatim\.openstreetmap\.org\/search/);
+  assert.match(scriptText, /nominatim\.openstreetmap\.org\/reverse/);
   assert.match(scriptText, /selectLocation/);
   assert.match(scriptText, /openstreetmap\.org\/export\/embed\.html/);
   const addressSearch = await fetch(`${baseUrl}/address-search.js`);
